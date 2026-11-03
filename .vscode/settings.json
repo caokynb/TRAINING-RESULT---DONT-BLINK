@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Dont Blink - Training Result Game.slnx"
+    "dotnet.defaultSolution": "TRAINING RESULT - DONT BLINK.slnx"
 }
