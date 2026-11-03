@@ -1,0 +1,265 @@
+using UnityEditor;
+using UnityEngine;
+
+public static class MapBuilder
+{
+    private const string DefaultThemePath = "Assets/07 SETTINGS/BackroomsTheme.asset";
+    private const string DefaultMapPath = "Assets/03 ASSETS/Maps/sample_map_30x30.txt";
+    private const string WallCleanPath = "Assets/04 PREFABS/Level/Wall_Clean.prefab";
+    private const string WallDirtyPath = "Assets/04 PREFABS/Level/Wall_Dirty.prefab";
+    private const string FloorCarpetPath = "Assets/04 PREFABS/Level/Floor_Carpet.prefab";
+    private const string CeilingTilePath = "Assets/04 PREFABS/Level/Ceiling_Tile.prefab";
+    private const string CeilingLightPath = "Assets/04 PREFABS/Level/Ceiling_Light.prefab";
+    private const string CeilingLightOffPath = "Assets/04 PREFABS/Level/Ceiling_Light_Turn_Off.prefab";
+    private const string DoorExitPath = "Assets/04 PREFABS/Level/DoorFrame_Exit.prefab";
+
+    [MenuItem("Tools/Backrooms/Build Map")]
+    public static void BuildMap()
+    {
+        MapGrid mapGrid = Object.FindFirstObjectByType<MapGrid>();
+        if (mapGrid == null)
+        {
+            EditorUtility.DisplayDialog("Build Map", "MapGrid not found in current scene!", "OK");
+            return;
+        }
+
+        if (mapGrid.LevelFile == null)
+        {
+            TextAsset defaultMap = AssetDatabase.LoadAssetAtPath<TextAsset>(DefaultMapPath);
+            if (defaultMap != null)
+            {
+                mapGrid.LevelFile = defaultMap;
+                EditorUtility.SetDirty(mapGrid);
+            }
+        }
+
+        mapGrid.LoadMap();
+        if (!mapGrid.IsLoaded)
+        {
+            EditorUtility.DisplayDialog("Build Map", "Failed to load map file from MapGrid!", "OK");
+            return;
+        }
+
+        MapTheme theme = mapGrid.Theme;
+        if (theme == null)
+        {
+            theme = AssetDatabase.LoadAssetAtPath<MapTheme>(DefaultThemePath);
+            if (theme != null)
+            {
+                mapGrid.Theme = theme;
+                EditorUtility.SetDirty(mapGrid);
+            }
+        }
+
+        GameObject wallCleanPrefab = GetRootPrefab(theme != null ? theme.WallPrefab : null, WallCleanPath);
+        GameObject wallDirtyPrefab = GetRootPrefab(theme != null ? theme.WallDirtyPrefab : null, WallDirtyPath);
+        GameObject floorPrefab = GetRootPrefab(theme != null ? theme.FloorPrefab : null, FloorCarpetPath);
+        GameObject ceilingTilePrefab = GetRootPrefab(theme != null ? theme.CeilingPrefab : null, CeilingTilePath);
+        GameObject ceilingLightPrefab = GetRootPrefab(theme != null ? theme.LightPrefab : null, CeilingLightPath);
+        GameObject ceilingLightOffPrefab = GetRootPrefab(theme != null ? theme.LightOffPrefab : null, CeilingLightOffPath);
+        GameObject doorExitPrefab = GetRootPrefab(theme != null ? theme.DoorPrefab : null, DoorExitPath);
+
+        if (theme != null)
+        {
+            SerializedObject so = new SerializedObject(theme);
+            SetObjectProperty(so, "wallPrefab", wallCleanPrefab);
+            SetObjectProperty(so, "wallDirtyPrefab", wallDirtyPrefab);
+            SetObjectProperty(so, "floorPrefab", floorPrefab);
+            SetObjectProperty(so, "ceilingPrefab", ceilingTilePrefab);
+            SetObjectProperty(so, "lightPrefab", ceilingLightPrefab);
+            SetObjectProperty(so, "lightOffPrefab", ceilingLightOffPrefab);
+            SetObjectProperty(so, "doorPrefab", doorExitPrefab);
+            SerializedProperty cellSizeProp = so.FindProperty("cellSize");
+            if (cellSizeProp != null)
+                cellSizeProp.floatValue = 3f;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(theme);
+        }
+
+        float cellSize = 3f;
+        float wallHeight = 3f;
+
+        GameObject existingRoot = GameObject.Find("Generated");
+        if (existingRoot != null)
+        {
+            Undo.DestroyObjectImmediate(existingRoot);
+        }
+
+        GameObject generatedRoot = new GameObject("Generated");
+        Undo.RegisterCreatedObjectUndo(generatedRoot, "Build Map");
+
+        for (int y = 0; y < mapGrid.Height; y++)
+        {
+            for (int x = 0; x < mapGrid.Width; x++)
+            {
+                Vector2Int cell = new Vector2Int(x, y);
+                if (!mapGrid.IsWalkable(cell))
+                    continue;
+
+                char cellChar = mapGrid.GetCell(cell);
+                Vector3 center = mapGrid.transform.TransformPoint(new Vector3(x * cellSize, 0f, y * cellSize));
+
+                SpawnFloor(generatedRoot.transform, floorPrefab, center, cellSize, x, y);
+                SpawnCeiling(generatedRoot.transform, ceilingTilePrefab, center, cellSize, wallHeight, $"Ceiling_{x}_{y}");
+
+                GameObject lightToUse = SelectLightPrefab(cellChar, x, y, ceilingLightPrefab, ceilingLightOffPrefab);
+                if (lightToUse != null)
+                {
+                    SpawnCeilingLight(generatedRoot.transform, lightToUse, center, wallHeight, $"CeilingLight_{x}_{y}");
+                }
+
+                bool doorPlaced = false;
+
+                CheckAndSpawnWall(mapGrid, generatedRoot.transform, wallCleanPrefab, wallDirtyPrefab, doorExitPrefab,
+                    cell, cellChar, ref doorPlaced, 0, Vector2Int.up, center,
+                    Quaternion.Euler(0f, 90f, 0f), $"Wall_{x}_{y}_North", cellSize, wallHeight);
+
+                CheckAndSpawnWall(mapGrid, generatedRoot.transform, wallCleanPrefab, wallDirtyPrefab, doorExitPrefab,
+                    cell, cellChar, ref doorPlaced, 1, Vector2Int.down, center,
+                    Quaternion.Euler(0f, -90f, 0f), $"Wall_{x}_{y}_South", cellSize, wallHeight);
+
+                CheckAndSpawnWall(mapGrid, generatedRoot.transform, wallCleanPrefab, wallDirtyPrefab, doorExitPrefab,
+                    cell, cellChar, ref doorPlaced, 2, Vector2Int.right, center,
+                    Quaternion.Euler(0f, 180f, 0f), $"Wall_{x}_{y}_East", cellSize, wallHeight);
+
+                CheckAndSpawnWall(mapGrid, generatedRoot.transform, wallCleanPrefab, wallDirtyPrefab, doorExitPrefab,
+                    cell, cellChar, ref doorPlaced, 3, Vector2Int.left, center,
+                    Quaternion.identity, $"Wall_{x}_{y}_West", cellSize, wallHeight);
+            }
+        }
+
+        EditorUtility.SetDirty(generatedRoot);
+        Debug.Log($"Build Map completed: {mapGrid.Width}x{mapGrid.Height} under root 'Generated'.");
+    }
+
+    private static void SetObjectProperty(SerializedObject so, string propName, Object value)
+    {
+        SerializedProperty prop = so.FindProperty(propName);
+        if (prop != null)
+            prop.objectReferenceValue = value;
+    }
+
+    private static GameObject GetRootPrefab(GameObject assignedPrefab, string fallbackPath)
+    {
+        if (assignedPrefab != null)
+        {
+            string assetPath = AssetDatabase.GetAssetPath(assignedPrefab);
+            if (!string.IsNullOrEmpty(assetPath))
+            {
+                GameObject root = AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+                if (root != null)
+                    return root;
+            }
+        }
+
+        return AssetDatabase.LoadAssetAtPath<GameObject>(fallbackPath);
+    }
+
+    private static GameObject SelectLightPrefab(char cellChar, int x, int y,
+        GameObject ceilingLightPrefab, GameObject ceilingLightOffPrefab)
+    {
+        if (cellChar == 'L' && ceilingLightPrefab != null)
+            return ceilingLightPrefab;
+
+        if (ceilingLightOffPrefab != null && ((x * 17 + y * 31) % 7 == 0))
+            return ceilingLightOffPrefab;
+
+        return null;
+    }
+
+    private static GameObject SelectWallPrefab(char cellChar, ref bool doorPlaced, int x, int y, int sideIndex,
+        GameObject wallCleanPrefab, GameObject wallDirtyPrefab, GameObject doorExitPrefab)
+    {
+        if (cellChar == 'E' && !doorPlaced && doorExitPrefab != null)
+        {
+            doorPlaced = true;
+            return doorExitPrefab;
+        }
+
+        if (wallDirtyPrefab != null && ((x * 13 + y * 29 + sideIndex * 7) % 4 == 0))
+            return wallDirtyPrefab;
+
+        return wallCleanPrefab;
+    }
+
+    private static void SpawnFloor(Transform parent, GameObject floorPrefab, Vector3 center, float cellSize, int x, int y)
+    {
+        if (floorPrefab != null)
+        {
+            GameObject floor = (GameObject)PrefabUtility.InstantiatePrefab(floorPrefab, parent);
+            floor.name = $"Floor_{x}_{y}";
+            floor.transform.position = center;
+            floor.transform.rotation = Quaternion.identity;
+        }
+        else
+        {
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = $"Floor_{x}_{y}";
+            cube.transform.SetParent(parent);
+            cube.transform.position = center + new Vector3(0f, -0.05f, 0f);
+            cube.transform.localScale = new Vector3(cellSize, 0.1f, cellSize);
+        }
+    }
+
+    private static void SpawnCeiling(Transform parent, GameObject ceilingPrefab, Vector3 center, float cellSize, float wallHeight, string ceilingName)
+    {
+        if (ceilingPrefab != null)
+        {
+            GameObject ceiling = (GameObject)PrefabUtility.InstantiatePrefab(ceilingPrefab, parent);
+            ceiling.name = ceilingName;
+            float childLocalY = ceiling.transform.childCount > 0 ? ceiling.transform.GetChild(0).localPosition.y : 0f;
+            float offsetY = childLocalY > 0.01f ? (wallHeight - childLocalY) : wallHeight;
+            ceiling.transform.position = center + new Vector3(0f, offsetY, 0f);
+            ceiling.transform.rotation = Quaternion.identity;
+        }
+        else
+        {
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = ceilingName;
+            cube.transform.SetParent(parent);
+            cube.transform.position = center + new Vector3(0f, wallHeight + 0.05f, 0f);
+            cube.transform.localScale = new Vector3(cellSize, 0.1f, cellSize);
+        }
+    }
+
+    private static void SpawnCeilingLight(Transform parent, GameObject lightPrefab, Vector3 center, float wallHeight, string lightName)
+    {
+        GameObject lightObj = (GameObject)PrefabUtility.InstantiatePrefab(lightPrefab, parent);
+        lightObj.name = lightName;
+        float childLocalY = lightObj.transform.childCount > 0 ? lightObj.transform.GetChild(0).localPosition.y : 0f;
+        float offsetY = childLocalY > 0.01f ? (wallHeight - childLocalY - 0.02f) : (wallHeight - 0.02f);
+        lightObj.transform.position = center + new Vector3(0f, offsetY, 0f);
+        lightObj.transform.rotation = Quaternion.identity;
+    }
+
+    private static void CheckAndSpawnWall(MapGrid mapGrid, Transform parent,
+        GameObject wallCleanPrefab, GameObject wallDirtyPrefab, GameObject doorExitPrefab,
+        Vector2Int cell, char cellChar, ref bool doorPlaced, int sideIndex,
+        Vector2Int direction, Vector3 center, Quaternion prefabRotation, string wallName, float cellSize, float wallHeight)
+    {
+        Vector2Int neighbor = cell + direction;
+        if (mapGrid.IsWalkable(neighbor))
+            return;
+
+        Vector3 wallPos = center + new Vector3(direction.x * cellSize * 0.5f, 0f, direction.y * cellSize * 0.5f);
+        GameObject prefabToUse = SelectWallPrefab(cellChar, ref doorPlaced, cell.x, cell.y, sideIndex,
+            wallCleanPrefab, wallDirtyPrefab, doorExitPrefab);
+
+        if (prefabToUse != null)
+        {
+            GameObject wall = (GameObject)PrefabUtility.InstantiatePrefab(prefabToUse, parent);
+            wall.name = prefabToUse == doorExitPrefab ? $"DoorExit_{cell.x}_{cell.y}" : wallName;
+            wall.transform.position = wallPos;
+            wall.transform.rotation = prefabRotation;
+        }
+        else
+        {
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = wallName;
+            cube.transform.SetParent(parent);
+            cube.transform.position = wallPos + new Vector3(0f, wallHeight * 0.5f, 0f);
+            Vector3 scale = (direction.x != 0) ? new Vector3(0.2f, wallHeight, cellSize) : new Vector3(cellSize, wallHeight, 0.2f);
+            cube.transform.localScale = scale;
+        }
+    }
+}
