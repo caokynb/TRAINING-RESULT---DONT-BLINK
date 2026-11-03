@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public sealed class PlayerMovement : MonoBehaviour
@@ -8,31 +7,18 @@ public sealed class PlayerMovement : MonoBehaviour
     [SerializeField, Min(0f)] private float gravity = -20f;
 
     private CharacterController characterController;
-    private InputAction moveAction;
+    private PlayerInputReader inputReader;
     private float verticalVelocity;
 
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();
-        moveAction = new InputAction("Move", InputActionType.Value);
-        moveAction.AddCompositeBinding("2DVector")
-            .With("Up", "<Keyboard>/w")
-            .With("Down", "<Keyboard>/s")
-            .With("Left", "<Keyboard>/a")
-            .With("Right", "<Keyboard>/d");
-        moveAction.AddCompositeBinding("2DVector")
-            .With("Up", "<Keyboard>/upArrow")
-            .With("Down", "<Keyboard>/downArrow")
-            .With("Left", "<Keyboard>/leftArrow")
-            .With("Right", "<Keyboard>/rightArrow");
+        inputReader = GetComponent<PlayerInputReader>();
     }
-
-    private void OnEnable() => moveAction.Enable();
-    private void OnDisable() => moveAction.Disable();
 
     private void Update()
     {
-        Vector2 input = Vector2.ClampMagnitude(moveAction.ReadValue<Vector2>(), 1f);
+        Vector2 input = inputReader.MoveInput;
         Vector3 planarVelocity = transform.right * input.x + transform.forward * input.y;
 
         if (characterController.isGrounded && verticalVelocity < 0f)
