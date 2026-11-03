@@ -242,7 +242,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BlinkSystem
   fatigueTime: 12
-  manualBlinkDuration: 0.2
+  manualFatigueRecoveryRate: 1
   manualBlinkCooldown: 1.5
   forcedBlinkDuration: 1
 --- !u!114 &7124806113792310043

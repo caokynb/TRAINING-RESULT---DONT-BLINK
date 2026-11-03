@@ -6,6 +6,7 @@ using UnityEngine.InputSystem;
 public sealed class PlayerInputReader : MonoBehaviour
 {
     public event Action BlinkPressed;
+    public event Action BlinkReleased;
     public event Action PausePressed;
 
     public Vector2 MoveInput { get; private set; }
@@ -31,6 +32,7 @@ public sealed class PlayerInputReader : MonoBehaviour
         pauseAction = CreateButtonAction("Pause", "<Keyboard>/escape");
 
         blinkAction.performed += OnBlink;
+        blinkAction.canceled += OnBlinkReleased;
         pauseAction.performed += OnPause;
     }
 
@@ -65,6 +67,7 @@ public sealed class PlayerInputReader : MonoBehaviour
     private void OnDestroy()
     {
         blinkAction.performed -= OnBlink;
+        blinkAction.canceled -= OnBlinkReleased;
         pauseAction.performed -= OnPause;
         moveAction.Dispose();
         lookAction.Dispose();
@@ -88,6 +91,11 @@ public sealed class PlayerInputReader : MonoBehaviour
     {
         Debug.Log("Input: Blink (Space)");
         BlinkPressed?.Invoke();
+    }
+
+    private void OnBlinkReleased(InputAction.CallbackContext context)
+    {
+        BlinkReleased?.Invoke();
     }
 
     private void OnPause(InputAction.CallbackContext context)
