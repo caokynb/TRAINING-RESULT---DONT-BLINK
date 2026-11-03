@@ -7,8 +7,6 @@ public sealed class PlayerInputReader : MonoBehaviour
 {
     public event Action BlinkPressed;
     public event Action PausePressed;
-    public event Action RestartPressed;
-    public event Action DebugPressed;
 
     public Vector2 MoveInput { get; private set; }
     public Vector2 LookInput { get; private set; }
@@ -17,8 +15,6 @@ public sealed class PlayerInputReader : MonoBehaviour
     private InputAction lookAction;
     private InputAction blinkAction;
     private InputAction pauseAction;
-    private InputAction restartAction;
-    private InputAction debugAction;
 
     private void Awake()
     {
@@ -33,13 +29,9 @@ public sealed class PlayerInputReader : MonoBehaviour
         lookAction = new InputAction("Look", InputActionType.Value, "<Mouse>/delta");
         blinkAction = CreateButtonAction("Blink", "<Keyboard>/space");
         pauseAction = CreateButtonAction("Pause", "<Keyboard>/escape");
-        restartAction = CreateButtonAction("Restart", "<Keyboard>/r");
-        debugAction = CreateButtonAction("Debug", "<Keyboard>/f1");
 
         blinkAction.performed += OnBlink;
         pauseAction.performed += OnPause;
-        restartAction.performed += OnRestart;
-        debugAction.performed += OnDebug;
     }
 
     private static InputAction CreateButtonAction(string actionName, string binding) =>
@@ -51,8 +43,6 @@ public sealed class PlayerInputReader : MonoBehaviour
         lookAction.Enable();
         blinkAction.Enable();
         pauseAction.Enable();
-        restartAction.Enable();
-        debugAction.Enable();
         LockCursor();
     }
 
@@ -68,8 +58,6 @@ public sealed class PlayerInputReader : MonoBehaviour
         lookAction.Disable();
         blinkAction.Disable();
         pauseAction.Disable();
-        restartAction.Disable();
-        debugAction.Disable();
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -78,14 +66,10 @@ public sealed class PlayerInputReader : MonoBehaviour
     {
         blinkAction.performed -= OnBlink;
         pauseAction.performed -= OnPause;
-        restartAction.performed -= OnRestart;
-        debugAction.performed -= OnDebug;
         moveAction.Dispose();
         lookAction.Dispose();
         blinkAction.Dispose();
         pauseAction.Dispose();
-        restartAction.Dispose();
-        debugAction.Dispose();
     }
 
     private void OnApplicationFocus(bool hasFocus)
@@ -112,15 +96,4 @@ public sealed class PlayerInputReader : MonoBehaviour
         PausePressed?.Invoke();
     }
 
-    private void OnRestart(InputAction.CallbackContext context)
-    {
-        Debug.Log("Input: Restart (R)");
-        RestartPressed?.Invoke();
-    }
-
-    private void OnDebug(InputAction.CallbackContext context)
-    {
-        Debug.Log("Input: Debug (F1)");
-        DebugPressed?.Invoke();
-    }
 }
