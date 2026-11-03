@@ -149,6 +149,7 @@ GameObject:
   - component: {fileID: 7301554197381960542}
   - component: {fileID: 8477163493513030927}
   - component: {fileID: 5401367229094429891}
+  - component: {fileID: 7144806113792310043}
   - component: {fileID: 7124806113792310043}
   m_Layer: 0
   m_Name: Player
@@ -239,6 +240,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b9d8068e6fd4dc48d6a2339abd083c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInputReader
+--- !u!114 &7144806113792310043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3826544647602864080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34404f249a7b4e4f8e46e6b4f7eac07f, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::BlinkSystem
+  fatigueTime: 12
+  manualBlinkDuration: 0.2
+  manualBlinkCooldown: 1.5
+  forcedBlinkDuration: 1
 --- !u!1 &6705970721198326511
 GameObject:
   m_ObjectHideFlags: 0
