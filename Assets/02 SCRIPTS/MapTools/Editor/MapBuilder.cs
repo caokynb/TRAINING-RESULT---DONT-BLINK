@@ -256,13 +256,13 @@ public static class MapBuilder
         marker.transform.rotation = Quaternion.identity;
         marker.tag = markerTag;
 
-        // Nếu là Exit marker, gắn trigger collider sẵn để tích hợp với Player ExitDetector
         if (cellChar == 'E')
         {
             BoxCollider trigger = marker.AddComponent<BoxCollider>();
             trigger.isTrigger = true;
             trigger.size = new Vector3(2f, 3f, 2f);
             trigger.center = new Vector3(0f, 1.5f, 0f);
+            marker.AddComponent<ExitDoorTrigger>();
         }
     }
 
