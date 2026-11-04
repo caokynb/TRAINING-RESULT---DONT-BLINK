@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2891997102670998839}
+  - component: {fileID: -1507952549922131599}
   m_Layer: 0
   m_Name: Ceiling_Light
   m_TagString: Untagged
@@ -33,6 +34,28 @@ Transform:
   - {fileID: 3744539111103787928}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &-1507952549922131599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1521561232354678728}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eaa2948c1dfe87e4fbc6ca0eb21b99e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightFlicker
+  preset: 0
+  intensityFactor: 0.2
+  targetLight: {fileID: 0}
+  emissiveRenderer: {fileID: 0}
+  emissionProperty: _EmissionColor
+  baseIntensity: 1.5
+  minIntensityRatio: 0.6
+  flickerSpeed: 0.1
+  minInterval: 4
+  maxInterval: 9
 --- !u!1 &2599447732673768301
 GameObject:
   m_ObjectHideFlags: 0
