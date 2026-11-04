@@ -97,6 +97,7 @@ public static class MapBuilder
         Undo.RegisterCreatedObjectUndo(generatedRoot, "Build Map");
 
         System.Random rng = new System.Random(FixedSeed);
+        Vector3? monsterSpawnPos = null;
 
         for (int y = 0; y < mapGrid.Height; y++)
         {
@@ -112,10 +113,16 @@ public static class MapBuilder
                 SpawnFloor(generatedRoot.transform, floorPrefab, center, cellSize, x, y);
                 SpawnCeiling(generatedRoot.transform, ceilingTilePrefab, center, cellSize, wallHeight, $"Ceiling_{x}_{y}");
 
-                GameObject lightToUse = SelectLightPrefab(cellChar, rng, ceilingLightPrefab, ceilingLightOffPrefab);
+                // Chỉ sinh đèn sáng khi ô là 'L', không sinh ngẫu nhiên đèn tắt nữa
+                GameObject lightToUse = SelectLightPrefab(cellChar, ceilingLightPrefab);
                 if (lightToUse != null)
                 {
                     SpawnCeilingLight(generatedRoot.transform, lightToUse, center, wallHeight, $"CeilingLight_{x}_{y}");
+                }
+
+                if (cellChar == 'M')
+                {
+                    monsterSpawnPos = center;
                 }
 
                 SpawnMarkerIfAny(generatedRoot.transform, cellChar, center);
@@ -140,30 +147,44 @@ public static class MapBuilder
             }
         }
 
-        EnsureMonsterSpawner();
+        EnsureMonsterSpawner(monsterSpawnPos);
 
         EditorUtility.SetDirty(generatedRoot);
         Debug.Log($"Build Map completed: {mapGrid.Width}x{mapGrid.Height} under root 'Generated'.");
     }
 
-    private static void EnsureMonsterSpawner()
+    private static void EnsureMonsterSpawner(Vector3? monsterSpawnPos)
     {
         MonsterSpawner spawner = Object.FindFirstObjectByType<MonsterSpawner>();
+        GameObject spawnerObj;
         if (spawner == null)
         {
-            GameObject spawnerObj = new GameObject("MonsterSpawner");
+            spawnerObj = new GameObject("MonsterSpawner");
             Undo.RegisterCreatedObjectUndo(spawnerObj, "Create MonsterSpawner");
             spawner = spawnerObj.AddComponent<MonsterSpawner>();
         }
+        else
+        {
+            spawnerObj = spawner.gameObject;
+        }
+
+        // Tự động gắn tag MonsterSpawn cho MonsterSpawner
+        spawnerObj.tag = "MonsterSpawn";
+
+        if (monsterSpawnPos.HasValue)
+        {
+            spawnerObj.transform.position = monsterSpawnPos.Value;
+        }
 
         GameObject monsterPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MonsterPrefabPath);
+        GameObject spawnMarker = GameObject.Find("MonsterSpawn");
+        SerializedObject so = new SerializedObject(spawner);
         if (monsterPrefab != null)
-        {
-            SerializedObject so = new SerializedObject(spawner);
             SetObjectProperty(so, "monsterPrefab", monsterPrefab);
-            so.ApplyModifiedPropertiesWithoutUndo();
-            EditorUtility.SetDirty(spawner);
-        }
+        if (spawnMarker != null)
+            SetObjectProperty(so, "spawnPoint", spawnMarker.transform);
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(spawner);
     }
 
     private static void EnsureTagsExist(params string[] requiredTags)
@@ -234,6 +255,15 @@ public static class MapBuilder
         marker.transform.position = center;
         marker.transform.rotation = Quaternion.identity;
         marker.tag = markerTag;
+
+        // Nếu là Exit marker, gắn trigger collider sẵn để tích hợp với Player ExitDetector
+        if (cellChar == 'E')
+        {
+            BoxCollider trigger = marker.AddComponent<BoxCollider>();
+            trigger.isTrigger = true;
+            trigger.size = new Vector3(2f, 3f, 2f);
+            trigger.center = new Vector3(0f, 1.5f, 0f);
+        }
     }
 
     private static void SetObjectProperty(SerializedObject so, string propName, Object value)
@@ -259,14 +289,11 @@ public static class MapBuilder
         return AssetDatabase.LoadAssetAtPath<GameObject>(fallbackPath);
     }
 
-    private static GameObject SelectLightPrefab(char cellChar, System.Random rng,
-        GameObject ceilingLightPrefab, GameObject ceilingLightOffPrefab)
+    private static GameObject SelectLightPrefab(char cellChar, GameObject ceilingLightPrefab)
     {
+        // Chỉ sinh đèn sáng khi ô bản đồ có ký tự 'L'
         if (cellChar == 'L' && ceilingLightPrefab != null)
             return ceilingLightPrefab;
-
-        if (ceilingLightOffPrefab != null && rng.NextDouble() < 0.15)
-            return ceilingLightOffPrefab;
 
         return null;
     }
@@ -355,6 +382,12 @@ public static class MapBuilder
             wall.name = prefabToUse == doorExitPrefab ? $"DoorExit_{cell.x}_{cell.y}" : wallName;
             wall.transform.position = wallPos;
             wall.transform.rotation = prefabRotation;
+
+            // Gắn tag Exit cho cánh cửa Exit
+            if (prefabToUse == doorExitPrefab)
+            {
+                wall.tag = "Exit";
+            }
         }
         else
         {
