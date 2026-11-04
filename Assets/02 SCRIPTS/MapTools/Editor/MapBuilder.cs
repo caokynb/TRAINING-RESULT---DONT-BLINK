@@ -177,13 +177,14 @@ public static class MapBuilder
         }
 
         GameObject monsterPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MonsterPrefabPath);
+        GameObject spawnMarker = GameObject.Find("MonsterSpawn");
+        SerializedObject so = new SerializedObject(spawner);
         if (monsterPrefab != null)
-        {
-            SerializedObject so = new SerializedObject(spawner);
             SetObjectProperty(so, "monsterPrefab", monsterPrefab);
-            so.ApplyModifiedPropertiesWithoutUndo();
-            EditorUtility.SetDirty(spawner);
-        }
+        if (spawnMarker != null)
+            SetObjectProperty(so, "spawnPoint", spawnMarker.transform);
+        so.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(spawner);
     }
 
     private static void EnsureTagsExist(params string[] requiredTags)
