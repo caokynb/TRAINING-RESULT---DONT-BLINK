@@ -3,8 +3,10 @@ using UnityEngine;
 
 public static class MapBuilder
 {
+    private const int FixedSeed = 1337;
     private const string DefaultThemePath = "Assets/07 SETTINGS/BackroomsTheme.asset";
-    private const string DefaultMapPath = "Assets/03 ASSETS/Maps/sample_map_30x30.txt";
+    private const string Level01MapPath = "Assets/03 ASSETS/Maps/level01.txt";
+    private const string FallbackMapPath = "Assets/03 ASSETS/Maps/sample_map_30x30.txt";
     private const string WallCleanPath = "Assets/04 PREFABS/Level/Wall_Clean.prefab";
     private const string WallDirtyPath = "Assets/04 PREFABS/Level/Wall_Dirty.prefab";
     private const string FloorCarpetPath = "Assets/04 PREFABS/Level/Floor_Carpet.prefab";
@@ -12,10 +14,13 @@ public static class MapBuilder
     private const string CeilingLightPath = "Assets/04 PREFABS/Level/Ceiling_Light.prefab";
     private const string CeilingLightOffPath = "Assets/04 PREFABS/Level/Ceiling_Light_Turn_Off.prefab";
     private const string DoorExitPath = "Assets/04 PREFABS/Level/DoorFrame_Exit.prefab";
+    private const string MonsterPrefabPath = "Assets/04 PREFABS/Monster/Monster.prefab";
 
     [MenuItem("Tools/Backrooms/Build Map")]
     public static void BuildMap()
     {
+        EnsureTagsExist("PlayerSpawn", "MonsterSpawn", "Exit", "Monster");
+
         MapGrid mapGrid = Object.FindFirstObjectByType<MapGrid>();
         if (mapGrid == null)
         {
@@ -25,7 +30,10 @@ public static class MapBuilder
 
         if (mapGrid.LevelFile == null)
         {
-            TextAsset defaultMap = AssetDatabase.LoadAssetAtPath<TextAsset>(DefaultMapPath);
+            TextAsset defaultMap = AssetDatabase.LoadAssetAtPath<TextAsset>(Level01MapPath);
+            if (defaultMap == null)
+                defaultMap = AssetDatabase.LoadAssetAtPath<TextAsset>(FallbackMapPath);
+
             if (defaultMap != null)
             {
                 mapGrid.LevelFile = defaultMap;
@@ -79,14 +87,16 @@ public static class MapBuilder
         float cellSize = 3f;
         float wallHeight = 3f;
 
-        GameObject existingRoot = GameObject.Find("Generated");
-        if (existingRoot != null)
+        GameObject existingRoot;
+        while ((existingRoot = GameObject.Find("Generated")) != null)
         {
             Undo.DestroyObjectImmediate(existingRoot);
         }
 
         GameObject generatedRoot = new GameObject("Generated");
         Undo.RegisterCreatedObjectUndo(generatedRoot, "Build Map");
+
+        System.Random rng = new System.Random(FixedSeed);
 
         for (int y = 0; y < mapGrid.Height; y++)
         {
@@ -102,34 +112,128 @@ public static class MapBuilder
                 SpawnFloor(generatedRoot.transform, floorPrefab, center, cellSize, x, y);
                 SpawnCeiling(generatedRoot.transform, ceilingTilePrefab, center, cellSize, wallHeight, $"Ceiling_{x}_{y}");
 
-                GameObject lightToUse = SelectLightPrefab(cellChar, x, y, ceilingLightPrefab, ceilingLightOffPrefab);
+                GameObject lightToUse = SelectLightPrefab(cellChar, rng, ceilingLightPrefab, ceilingLightOffPrefab);
                 if (lightToUse != null)
                 {
                     SpawnCeilingLight(generatedRoot.transform, lightToUse, center, wallHeight, $"CeilingLight_{x}_{y}");
                 }
 
+                SpawnMarkerIfAny(generatedRoot.transform, cellChar, center);
+
                 bool doorPlaced = false;
 
                 CheckAndSpawnWall(mapGrid, generatedRoot.transform, wallCleanPrefab, wallDirtyPrefab, doorExitPrefab,
-                    cell, cellChar, ref doorPlaced, 0, Vector2Int.up, center,
+                    cell, cellChar, ref doorPlaced, rng, Vector2Int.up, center,
                     Quaternion.Euler(0f, 90f, 0f), $"Wall_{x}_{y}_North", cellSize, wallHeight);
 
                 CheckAndSpawnWall(mapGrid, generatedRoot.transform, wallCleanPrefab, wallDirtyPrefab, doorExitPrefab,
-                    cell, cellChar, ref doorPlaced, 1, Vector2Int.down, center,
+                    cell, cellChar, ref doorPlaced, rng, Vector2Int.down, center,
                     Quaternion.Euler(0f, -90f, 0f), $"Wall_{x}_{y}_South", cellSize, wallHeight);
 
                 CheckAndSpawnWall(mapGrid, generatedRoot.transform, wallCleanPrefab, wallDirtyPrefab, doorExitPrefab,
-                    cell, cellChar, ref doorPlaced, 2, Vector2Int.right, center,
+                    cell, cellChar, ref doorPlaced, rng, Vector2Int.right, center,
                     Quaternion.Euler(0f, 180f, 0f), $"Wall_{x}_{y}_East", cellSize, wallHeight);
 
                 CheckAndSpawnWall(mapGrid, generatedRoot.transform, wallCleanPrefab, wallDirtyPrefab, doorExitPrefab,
-                    cell, cellChar, ref doorPlaced, 3, Vector2Int.left, center,
+                    cell, cellChar, ref doorPlaced, rng, Vector2Int.left, center,
                     Quaternion.identity, $"Wall_{x}_{y}_West", cellSize, wallHeight);
             }
         }
 
+        EnsureMonsterSpawner();
+
         EditorUtility.SetDirty(generatedRoot);
         Debug.Log($"Build Map completed: {mapGrid.Width}x{mapGrid.Height} under root 'Generated'.");
+    }
+
+    private static void EnsureMonsterSpawner()
+    {
+        MonsterSpawner spawner = Object.FindFirstObjectByType<MonsterSpawner>();
+        if (spawner == null)
+        {
+            GameObject spawnerObj = new GameObject("MonsterSpawner");
+            Undo.RegisterCreatedObjectUndo(spawnerObj, "Create MonsterSpawner");
+            spawner = spawnerObj.AddComponent<MonsterSpawner>();
+        }
+
+        GameObject monsterPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(MonsterPrefabPath);
+        if (monsterPrefab != null)
+        {
+            SerializedObject so = new SerializedObject(spawner);
+            SetObjectProperty(so, "monsterPrefab", monsterPrefab);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(spawner);
+        }
+    }
+
+    private static void EnsureTagsExist(params string[] requiredTags)
+    {
+        Object[] tagAssets = AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset");
+        if (tagAssets == null || tagAssets.Length == 0)
+            return;
+
+        SerializedObject tagManager = new SerializedObject(tagAssets[0]);
+        SerializedProperty tagsProp = tagManager.FindProperty("tags");
+        if (tagsProp == null)
+            return;
+
+        bool modified = false;
+        foreach (string tag in requiredTags)
+        {
+            bool found = false;
+            for (int i = 0; i < tagsProp.arraySize; i++)
+            {
+                if (tagsProp.GetArrayElementAtIndex(i).stringValue == tag)
+                {
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found)
+            {
+                int index = tagsProp.arraySize;
+                tagsProp.InsertArrayElementAtIndex(index);
+                tagsProp.GetArrayElementAtIndex(index).stringValue = tag;
+                modified = true;
+            }
+        }
+
+        if (modified)
+        {
+            tagManager.ApplyModifiedPropertiesWithoutUndo();
+        }
+    }
+
+    private static void SpawnMarkerIfAny(Transform parent, char cellChar, Vector3 center)
+    {
+        string markerName = null;
+        string markerTag = null;
+
+        if (cellChar == 'P')
+        {
+            markerName = "PlayerSpawn";
+            markerTag = "PlayerSpawn";
+        }
+        else if (cellChar == 'M')
+        {
+            markerName = "MonsterSpawn";
+            markerTag = "MonsterSpawn";
+        }
+        else if (cellChar == 'E')
+        {
+            markerName = "Exit";
+            markerTag = "Exit";
+        }
+
+        if (markerName == null)
+            return;
+
+        GameObject marker = new GameObject(markerName);
+        marker.transform.SetParent(parent);
+        marker.transform.position = center;
+        marker.transform.rotation = Quaternion.identity;
+        marker.tag = markerTag;
     }
 
     private static void SetObjectProperty(SerializedObject so, string propName, Object value)
@@ -155,19 +259,19 @@ public static class MapBuilder
         return AssetDatabase.LoadAssetAtPath<GameObject>(fallbackPath);
     }
 
-    private static GameObject SelectLightPrefab(char cellChar, int x, int y,
+    private static GameObject SelectLightPrefab(char cellChar, System.Random rng,
         GameObject ceilingLightPrefab, GameObject ceilingLightOffPrefab)
     {
         if (cellChar == 'L' && ceilingLightPrefab != null)
             return ceilingLightPrefab;
 
-        if (ceilingLightOffPrefab != null && ((x * 17 + y * 31) % 7 == 0))
+        if (ceilingLightOffPrefab != null && rng.NextDouble() < 0.15)
             return ceilingLightOffPrefab;
 
         return null;
     }
 
-    private static GameObject SelectWallPrefab(char cellChar, ref bool doorPlaced, int x, int y, int sideIndex,
+    private static GameObject SelectWallPrefab(char cellChar, ref bool doorPlaced, System.Random rng,
         GameObject wallCleanPrefab, GameObject wallDirtyPrefab, GameObject doorExitPrefab)
     {
         if (cellChar == 'E' && !doorPlaced && doorExitPrefab != null)
@@ -176,7 +280,7 @@ public static class MapBuilder
             return doorExitPrefab;
         }
 
-        if (wallDirtyPrefab != null && ((x * 13 + y * 29 + sideIndex * 7) % 4 == 0))
+        if (wallDirtyPrefab != null && rng.NextDouble() < 0.25)
             return wallDirtyPrefab;
 
         return wallCleanPrefab;
@@ -234,7 +338,7 @@ public static class MapBuilder
 
     private static void CheckAndSpawnWall(MapGrid mapGrid, Transform parent,
         GameObject wallCleanPrefab, GameObject wallDirtyPrefab, GameObject doorExitPrefab,
-        Vector2Int cell, char cellChar, ref bool doorPlaced, int sideIndex,
+        Vector2Int cell, char cellChar, ref bool doorPlaced, System.Random rng,
         Vector2Int direction, Vector3 center, Quaternion prefabRotation, string wallName, float cellSize, float wallHeight)
     {
         Vector2Int neighbor = cell + direction;
@@ -242,7 +346,7 @@ public static class MapBuilder
             return;
 
         Vector3 wallPos = center + new Vector3(direction.x * cellSize * 0.5f, 0f, direction.y * cellSize * 0.5f);
-        GameObject prefabToUse = SelectWallPrefab(cellChar, ref doorPlaced, cell.x, cell.y, sideIndex,
+        GameObject prefabToUse = SelectWallPrefab(cellChar, ref doorPlaced, rng,
             wallCleanPrefab, wallDirtyPrefab, doorExitPrefab);
 
         if (prefabToUse != null)
