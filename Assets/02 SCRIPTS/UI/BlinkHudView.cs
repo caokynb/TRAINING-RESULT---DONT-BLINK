@@ -57,7 +57,7 @@ public sealed class BlinkHudView : MonoBehaviour
         GameObject canvasObject = new GameObject("Blink HUD", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
         hudCanvas = canvasObject.GetComponent<Canvas>();
         hudCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        hudCanvas.sortingOrder = 100;
+        hudCanvas.sortingOrder = -1;
 
         CanvasScaler scaler = canvasObject.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
