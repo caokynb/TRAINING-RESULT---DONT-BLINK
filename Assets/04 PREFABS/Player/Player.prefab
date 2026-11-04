@@ -103,7 +103,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
-  m_Name:
+  m_Name: ""
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
   m_RenderShadows: 1
   m_RequiresDepthTextureOption: 2
@@ -153,9 +153,10 @@ GameObject:
   - component: {fileID: 7124806113792310043}
   - component: {fileID: 8844806113792310043}
   - component: {fileID: 923456789123456789}
+  - component: {fileID: 6801234567890123}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -289,6 +290,19 @@ MonoBehaviour:
   instructionImageSize: {x: 1500, y: 844}
   confirmButtonSize: {x: 300, y: 76}
   buttonFontSize: 40
+--- !u!114 &6801234567890123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3826544647602864080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68f21b07d3104d489b72f128f6b4d561, type: 3}
+  m_Name: ""
+  m_EditorClassIdentifier: Assembly-CSharp::ExitDetector
+  exitTag: Exit
 --- !u!1 &6705970721198326511
 GameObject:
   m_ObjectHideFlags: 0
