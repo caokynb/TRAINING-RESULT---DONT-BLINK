@@ -51,7 +51,7 @@ MonoBehaviour:
   targetLight: {fileID: 0}
   emissiveRenderer: {fileID: 0}
   emissionProperty: _EmissionColor
-  baseIntensity: 1.5
+  baseIntensity: 10
   minIntensityRatio: 0.6
   flickerSpeed: 0.1
   minInterval: 4
