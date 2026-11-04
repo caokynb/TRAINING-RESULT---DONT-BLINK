@@ -1,23 +1,117 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 public class MonsterBrain : MonoBehaviour
 {
+    [SerializeField] private float initialGracePeriod = 10f;
+    [SerializeField] private float catchDistance = 1.8f;
+    [SerializeField] private int nearCellThreshold = 4;
+    [SerializeField] private int farCellThreshold = 10;
+    [SerializeField] private int nearBlinkSteps = 1;
+    [SerializeField] private int normalMinBlinkSteps = 1;
+    [SerializeField] private int normalMaxBlinkSteps = 2;
+    [SerializeField] private int farBlinkSteps = 3;
+    [SerializeField] private float nearHoldStepInterval = 0.45f;
+    [SerializeField] private float normalHoldStepInterval = 0.35f;
+    [SerializeField] private float farHoldStepInterval = 0.2f;
+    [SerializeField] private float minHoldStepInterval = 0.1f;
+    [SerializeField] private float holdAcceleration = 0.18f;
     [SerializeField] private float simulatedBlinkDuration = 0.25f;
+    [SerializeField] private UnityEvent onPlayerCaught;
+
+    private MapGrid mapGrid;
+    private Transform playerTransform;
+    private BlinkSystem blinkSystem;
+    private float spawnTime;
+    private float holdStepTimer;
+    private float closedDuration;
+    private bool wasEyesClosed;
+    private bool hasCaughtPlayer;
+
+    private void Awake()
+    {
+        mapGrid = Object.FindFirstObjectByType<MapGrid>();
+        ResolvePlayer();
+    }
+
+    private void Start()
+    {
+        spawnTime = Time.time;
+        ResolvePlayer();
+        FacePlayer();
+    }
 
     private void OnEnable()
     {
         BlinkEvents.OnEyesClosed += HandleEyesClosed;
         BlinkEvents.OnEyesOpened += HandleEyesOpened;
+        GameEvents.OnPlayerCaught += Die;
     }
 
     private void OnDisable()
     {
         BlinkEvents.OnEyesClosed -= HandleEyesClosed;
         BlinkEvents.OnEyesOpened -= HandleEyesOpened;
+        GameEvents.OnPlayerCaught -= Die;
     }
 
     private void Update()
+    {
+        HandleDebugInput();
+
+        if (hasCaughtPlayer)
+            return;
+
+        ResolvePlayer();
+        CheckCatchDistance();
+        if (hasCaughtPlayer)
+            return;
+
+        bool eyesClosed = IsEyesClosed();
+
+        if (!eyesClosed)
+        {
+            if (wasEyesClosed)
+            {
+                wasEyesClosed = false;
+                holdStepTimer = 0f;
+                closedDuration = 0f;
+                FacePlayer();
+            }
+            return;
+        }
+
+        if (!wasEyesClosed)
+        {
+            wasEyesClosed = true;
+            holdStepTimer = 0f;
+            closedDuration = 0f;
+        }
+
+        if (!IsGracePeriodOver())
+            return;
+
+        closedDuration += Time.deltaTime;
+        holdStepTimer += Time.deltaTime;
+
+        int cellDist = GetCurrentCellDistance();
+        float baseInterval = GetBaseIntervalByDistance(cellDist);
+        float currentInterval = Mathf.Max(
+            minHoldStepInterval,
+            baseInterval - closedDuration * holdAcceleration
+        );
+
+        if (holdStepTimer >= currentInterval)
+        {
+            holdStepTimer -= currentInterval;
+            int holdSteps = GetHoldSteps(cellDist, closedDuration);
+            StepTowardsPlayer(holdSteps);
+        }
+    }
+
+    private void HandleDebugInput()
     {
         if (Keyboard.current == null)
             return;
@@ -34,11 +128,297 @@ public class MonsterBrain : MonoBehaviour
 
     private void HandleEyesClosed(float duration)
     {
+        wasEyesClosed = true;
+        holdStepTimer = 0f;
+        closedDuration = 0f;
         Debug.Log($"[MonsterBrain] Eyes Closed (duration: {duration:F2}s)");
+
+        if (hasCaughtPlayer)
+            return;
+
+        if (!IsGracePeriodOver())
+        {
+            FacePlayer();
+            return;
+        }
+
+        int cellDist = GetCurrentCellDistance();
+        int steps = GetInitialBlinkSteps(cellDist);
+        StepTowardsPlayer(steps);
     }
 
     private void HandleEyesOpened()
     {
+        wasEyesClosed = false;
+        holdStepTimer = 0f;
+        closedDuration = 0f;
+        FacePlayer();
         Debug.Log("[MonsterBrain] Eyes Opened");
+    }
+
+    private void Die()
+    {
+        Debug.Log("Die");
+        onPlayerCaught?.Invoke();
+    }
+
+    private int GetInitialBlinkSteps(int cellDist)
+    {
+        if (cellDist <= nearCellThreshold)
+            return nearBlinkSteps;
+
+        if (cellDist >= farCellThreshold * 2)
+            return farBlinkSteps + 1;
+
+        if (cellDist >= farCellThreshold)
+            return farBlinkSteps;
+
+        return Random.Range(normalMinBlinkSteps, normalMaxBlinkSteps + 1);
+    }
+
+    private float GetBaseIntervalByDistance(int cellDist)
+    {
+        if (cellDist <= nearCellThreshold)
+            return nearHoldStepInterval;
+
+        if (cellDist >= farCellThreshold)
+            return farHoldStepInterval;
+
+        return normalHoldStepInterval;
+    }
+
+    private int GetHoldSteps(int cellDist, float heldTime)
+    {
+        if (cellDist <= nearCellThreshold)
+            return heldTime >= 1.2f ? 2 : 1;
+
+        if (cellDist >= farCellThreshold)
+            return heldTime >= 0.6f ? 3 : 2;
+
+        return heldTime >= 0.8f ? 2 : 1;
+    }
+
+    private int GetCurrentCellDistance()
+    {
+        if (mapGrid == null)
+            mapGrid = Object.FindFirstObjectByType<MapGrid>();
+
+        if (mapGrid != null && !mapGrid.IsLoaded)
+            mapGrid.LoadMap();
+
+        ResolvePlayer();
+        if (playerTransform == null)
+            return 0;
+
+        if (mapGrid != null && mapGrid.IsLoaded)
+        {
+            Vector2Int monsterCell = mapGrid.WorldToCell(transform.position);
+            Vector2Int playerCell = mapGrid.FindNearestWalkableCell(mapGrid.WorldToCell(playerTransform.position));
+            int bfsDist = mapGrid.GetBFSDistance(monsterCell, playerCell);
+            if (bfsDist >= 0)
+                return bfsDist;
+        }
+
+        float cellSize = mapGrid != null ? mapGrid.CellSize : 3f;
+        float worldDist = Vector2.Distance(
+            new Vector2(transform.position.x, transform.position.z),
+            new Vector2(playerTransform.position.x, playerTransform.position.z)
+        );
+        return Mathf.RoundToInt(worldDist / Mathf.Max(0.1f, cellSize));
+    }
+
+    private bool IsEyesClosed()
+    {
+        if (BlinkEvents.EyesClosed)
+            return true;
+
+        if (blinkSystem != null && blinkSystem.IsBlinking)
+            return true;
+
+        return false;
+    }
+
+    private bool IsGracePeriodOver()
+    {
+        return (Time.time - spawnTime) >= initialGracePeriod;
+    }
+
+    private void StepTowardsPlayer(int steps)
+    {
+        if (steps <= 0 || hasCaughtPlayer)
+            return;
+
+        if (mapGrid == null)
+            mapGrid = Object.FindFirstObjectByType<MapGrid>();
+
+        if (mapGrid != null && !mapGrid.IsLoaded)
+            mapGrid.LoadMap();
+
+        ResolvePlayer();
+        if (playerTransform == null)
+            return;
+
+        if (mapGrid != null && mapGrid.IsLoaded)
+        {
+            Vector2Int monsterCell = mapGrid.WorldToCell(transform.position);
+            Vector2Int playerCell = mapGrid.FindNearestWalkableCell(mapGrid.WorldToCell(playerTransform.position));
+
+            List<Vector2Int> path = mapGrid.GetBFSPath(monsterCell, playerCell);
+            if (path != null && path.Count > 1)
+            {
+                int targetIndex = Mathf.Min(steps, path.Count - 1);
+                Vector2Int nextCell = path[targetIndex];
+
+                if (nextCell == playerCell || targetIndex >= path.Count - 1)
+                {
+                    MoveInsidePlayerCell();
+                }
+                else
+                {
+                    Vector3 targetWorld = mapGrid.CellToWorld(nextCell);
+                    MoveMonsterTo(new Vector3(targetWorld.x, transform.position.y, targetWorld.z));
+                }
+
+                FacePlayer();
+                CheckCatchDistance();
+                return;
+            }
+
+            if (path != null && path.Count == 1)
+            {
+                MoveInsidePlayerCell();
+                FacePlayer();
+                CheckCatchDistance();
+                return;
+            }
+        }
+
+        MoveDirectTowardsPlayer(steps);
+        FacePlayer();
+        CheckCatchDistance();
+    }
+
+    private void MoveInsidePlayerCell()
+    {
+        Vector3 playerPos = playerTransform.position;
+        Vector3 toMonster = transform.position - playerPos;
+        toMonster.y = 0f;
+
+        float stopDist = Mathf.Min(1.0f, catchDistance * 0.5f);
+        Vector3 dir = toMonster.sqrMagnitude > 0.001f ? toMonster.normalized : -playerTransform.forward;
+        dir.y = 0f;
+
+        Vector3 targetPos = playerPos + dir * stopDist;
+        MoveMonsterTo(new Vector3(targetPos.x, transform.position.y, targetPos.z));
+    }
+
+    private void MoveDirectTowardsPlayer(int steps)
+    {
+        float cellSize = mapGrid != null ? mapGrid.CellSize : 3f;
+        float maxStepDistance = steps * cellSize;
+        Vector3 currentXZ = new Vector3(transform.position.x, 0f, transform.position.z);
+        Vector3 playerXZ = new Vector3(playerTransform.position.x, 0f, playerTransform.position.z);
+        float dist = Vector3.Distance(currentXZ, playerXZ);
+        float stopDist = Mathf.Min(1.0f, catchDistance * 0.5f);
+
+        if (dist <= stopDist)
+            return;
+
+        float moveDist = Mathf.Min(maxStepDistance, dist - stopDist);
+        Vector3 nextXZ = Vector3.MoveTowards(currentXZ, playerXZ, moveDist);
+        MoveMonsterTo(new Vector3(nextXZ.x, transform.position.y, nextXZ.z));
+    }
+
+    private void MoveMonsterTo(Vector3 targetPosition)
+    {
+        CharacterController cc = GetComponent<CharacterController>();
+        if (cc != null && cc.enabled)
+        {
+            cc.enabled = false;
+            transform.position = targetPosition;
+            cc.enabled = true;
+        }
+        else
+        {
+            transform.position = targetPosition;
+        }
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null && !rb.isKinematic)
+        {
+            rb.position = targetPosition;
+            rb.linearVelocity = Vector3.zero;
+        }
+    }
+
+    private void FacePlayer()
+    {
+        if (playerTransform == null)
+            return;
+
+        Vector3 direction = playerTransform.position - transform.position;
+        direction.y = 0f;
+        if (direction.sqrMagnitude > 0.0001f)
+        {
+            transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+        }
+    }
+
+    private void CheckCatchDistance()
+    {
+        if (hasCaughtPlayer || playerTransform == null)
+            return;
+
+        Vector2 monsterXZ = new Vector2(transform.position.x, transform.position.z);
+        Vector2 playerXZ = new Vector2(playerTransform.position.x, playerTransform.position.z);
+        float distance = Vector2.Distance(monsterXZ, playerXZ);
+
+        if (distance < catchDistance)
+        {
+            hasCaughtPlayer = true;
+            FacePlayer();
+            GameEvents.RaisePlayerCaught();
+        }
+    }
+
+    private void ResolvePlayer()
+    {
+        if (playerTransform == null)
+        {
+            PlayerMovement playerMovement = Object.FindFirstObjectByType<PlayerMovement>();
+            if (playerMovement != null)
+            {
+                playerTransform = playerMovement.transform;
+            }
+            else
+            {
+                try
+                {
+                    GameObject taggedPlayer = GameObject.FindWithTag("Player");
+                    if (taggedPlayer != null)
+                        playerTransform = taggedPlayer.transform;
+                }
+                catch
+                {
+                }
+
+                if (playerTransform == null)
+                {
+                    GameObject namedPlayer = GameObject.Find("Player");
+                    if (namedPlayer != null)
+                        playerTransform = namedPlayer.transform;
+                }
+
+                if (playerTransform == null && Camera.main != null)
+                {
+                    playerTransform = Camera.main.transform;
+                }
+            }
+        }
+
+        if (playerTransform != null && blinkSystem == null)
+        {
+            blinkSystem = playerTransform.GetComponentInParent<BlinkSystem>() ?? Object.FindFirstObjectByType<BlinkSystem>();
+        }
     }
 }
