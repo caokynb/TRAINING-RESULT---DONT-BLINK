@@ -52,9 +52,8 @@ public sealed class BlinkSystem : MonoBehaviour
         {
             if (isManualBlink)
             {
+                // Space controls how long the eyes stay closed; reaching zero fatigue does not open them.
                 SetFatigue(Fatigue - manualFatigueRecoveryRate * Time.deltaTime);
-                if (Fatigue <= 0f)
-                    FinishBlink();
             }
             else
             {
