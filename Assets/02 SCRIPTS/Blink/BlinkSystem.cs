@@ -99,17 +99,22 @@ public sealed class BlinkSystem : MonoBehaviour
         isManualBlink = isManual;
         blinkTimeRemaining = isManual ? 0f : duration;
 
-        playerMovement.SetMovementLocked(true);
+        if (!isManualBlink)
+            playerMovement.SetMovementLocked(true);
         BlinkEvents.RaiseClosed(duration);
         EyesClosedChanged?.Invoke(true);
     }
 
     private void FinishBlink()
     {
+        bool shouldUnlockMovement = !isManualBlink;
         IsBlinking = false;
         isManualBlink = false;
         blinkTimeRemaining = 0f;
-        playerMovement.SetMovementLocked(false);
+
+        if (shouldUnlockMovement)
+            playerMovement.SetMovementLocked(false);
+
         BlinkEvents.RaiseOpened();
         EyesClosedChanged?.Invoke(false);
     }
