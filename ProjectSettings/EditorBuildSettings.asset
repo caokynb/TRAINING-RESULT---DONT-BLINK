@@ -5,8 +5,20 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 1
+  - enabled: 0
     path: Assets/06 SANDBOX/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/01 SCENES/Main.unity
+    guid: 53b2cb18c4629c84383d428aec33e43c
+  - enabled: 1
+    path: Assets/01 SCENES/Level01_Art.unity
+    guid: 20062eea95536204085e2edf49a270b4
+  - enabled: 1
+    path: Assets/01 SCENES/Level01_Monster.unity
+    guid: 522b6ee3ade5f514aadbac4b6e39d2f5
+  - enabled: 1
+    path: Assets/01 SCENES/Level01_Systems.unity
+    guid: 126ba6a2bd8fcd449a05b5706065b6b2
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
