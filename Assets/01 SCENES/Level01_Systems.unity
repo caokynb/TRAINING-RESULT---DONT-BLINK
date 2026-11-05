@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 77426168}
   - component: {fileID: 710987654321}
   - component: {fileID: 710987654322}
+  - component: {fileID: 710987654323}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2210,6 +2211,21 @@ MonoBehaviour:
   restartButton: {fileID: 851501169}
   quitButton: {fileID: 1240519730}
   mainSceneName: Main
+--- !u!114 &710987654323
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 77426167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fee704d79e9904848a624134cd000737, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MainMenuScreenView
+  mainMenuPanel: {fileID: 0}
+  playButton: {fileID: 0}
+  quitButton: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
