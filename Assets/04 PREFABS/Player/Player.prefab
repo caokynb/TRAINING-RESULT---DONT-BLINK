@@ -103,7 +103,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
-  m_Name: ""
+  m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
   m_RenderShadows: 1
   m_RequiresDepthTextureOption: 2
@@ -214,6 +214,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c7444d9251264c16863e9215fd486635, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerMovement
+  settings: {fileID: 11400000, guid: d79e7e0ba86cfb24986507aa365115c3, type: 2}
   walkSpeed: 4
   gravity: -20
 --- !u!114 &5401367229094429891
@@ -229,6 +230,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerLook
   cameraPivot: {fileID: 3546066200366913682}
+  settings: {fileID: 11400000, guid: d79e7e0ba86cfb24986507aa365115c3, type: 2}
   sensitivity: 0.08
   pitchLimit: 85
 --- !u!114 &7144806113792310043
@@ -243,6 +245,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34404f249a7b4e4f8e46e6b4f7eac07f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BlinkSystem
+  settings: {fileID: 11400000, guid: d79e7e0ba86cfb24986507aa365115c3, type: 2}
   fatigueTime: 12
   manualFatigueRecoveryRate: 1
   manualBlinkCooldown: 1.5
@@ -284,7 +287,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c840a3854a104da2bb6218ef057416c2, type: 3}
-  m_Name: ""
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialScreenView
   instructionImage: {fileID: 2800000, guid: 1b26cf2bbde3cdd4fb9791b598774be0, type: 3}
   instructionImageSize: {x: 1500, y: 844}
@@ -300,7 +303,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 68f21b07d3104d489b72f128f6b4d561, type: 3}
-  m_Name: ""
+  m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExitDetector
   exitTag: Exit
 --- !u!1 &6705970721198326511

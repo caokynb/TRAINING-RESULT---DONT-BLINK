@@ -4,10 +4,25 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerInputReader), typeof(PlayerMovement))]
 public sealed class BlinkSystem : MonoBehaviour
 {
+    [Header("Settings")]
+    [SerializeField] private GameSettings settings;
+
+    [Header("Fallbacks (Used if Settings is not assigned)")]
     [SerializeField, Min(0.1f)] private float fatigueTime = 12f;
     [SerializeField, Min(0.01f)] private float manualFatigueRecoveryRate = 1f;
     [SerializeField, Min(0f)] private float manualBlinkCooldown = 1.5f;
     [SerializeField, Min(0.01f)] private float forcedBlinkDuration = 1f;
+
+    public GameSettings Settings
+    {
+        get => settings;
+        set => settings = value;
+    }
+
+    public float FatigueTime => settings != null ? settings.FatigueTime : fatigueTime;
+    public float ManualFatigueRecoveryRate => settings != null ? settings.ManualFatigueRecoveryRate : manualFatigueRecoveryRate;
+    public float ManualBlinkCooldown => settings != null ? settings.ManualBlinkCooldown : manualBlinkCooldown;
+    public float ForcedBlinkDuration => settings != null ? settings.ForcedBlinkDuration : forcedBlinkDuration;
 
     public event Action<float> FatigueChanged;
     public event Action<bool> EyesClosedChanged;
@@ -25,6 +40,13 @@ public sealed class BlinkSystem : MonoBehaviour
     {
         inputReader = GetComponent<PlayerInputReader>();
         playerMovement = GetComponent<PlayerMovement>();
+
+        if (settings == null)
+        {
+            var movement = GetComponent<PlayerMovement>();
+            if (movement != null && movement.Settings != null)
+                settings = movement.Settings;
+        }
     }
 
     private void OnEnable()
@@ -53,7 +75,7 @@ public sealed class BlinkSystem : MonoBehaviour
             if (isManualBlink)
             {
                 // Space controls how long the eyes stay closed; reaching zero fatigue does not open them.
-                SetFatigue(Fatigue - manualFatigueRecoveryRate * Time.deltaTime);
+                SetFatigue(Fatigue - ManualFatigueRecoveryRate * Time.deltaTime);
             }
             else
             {
@@ -65,7 +87,7 @@ public sealed class BlinkSystem : MonoBehaviour
             return;
         }
 
-        SetFatigue(Fatigue + Time.deltaTime / fatigueTime);
+        SetFatigue(Fatigue + Time.deltaTime / FatigueTime);
 
         if (Fatigue >= 1f)
             StartForcedBlink();
@@ -76,9 +98,9 @@ public sealed class BlinkSystem : MonoBehaviour
         if (IsBlinking || manualCooldownRemaining > 0f || Fatigue <= 0f)
             return;
 
-        float expectedDuration = Fatigue / manualFatigueRecoveryRate;
+        float expectedDuration = Fatigue / ManualFatigueRecoveryRate;
         StartBlink(expectedDuration, isManual: true);
-        manualCooldownRemaining = manualBlinkCooldown;
+        manualCooldownRemaining = ManualBlinkCooldown;
     }
 
     private void StopManualBlink()
@@ -90,7 +112,7 @@ public sealed class BlinkSystem : MonoBehaviour
     private void StartForcedBlink()
     {
         SetFatigue(0f);
-        StartBlink(forcedBlinkDuration, isManual: false);
+        StartBlink(ForcedBlinkDuration, isManual: false);
     }
 
     private void StartBlink(float duration, bool isManual)

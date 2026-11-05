@@ -3,8 +3,21 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public sealed class PlayerMovement : MonoBehaviour
 {
+    [Header("Settings")]
+    [SerializeField] private GameSettings settings;
+
+    [Header("Fallbacks (Used if Settings is not assigned)")]
     [SerializeField, Min(0f)] private float walkSpeed = 4f;
-    [SerializeField, Min(0f)] private float gravity = -20f;
+    [SerializeField] private float gravity = -20f;
+
+    public GameSettings Settings
+    {
+        get => settings;
+        set => settings = value;
+    }
+
+    public float WalkSpeed => settings != null ? settings.WalkSpeed : walkSpeed;
+    public float Gravity => settings != null ? settings.Gravity : gravity;
 
     private CharacterController characterController;
     private PlayerInputReader inputReader;
@@ -15,6 +28,13 @@ public sealed class PlayerMovement : MonoBehaviour
     {
         characterController = GetComponent<CharacterController>();
         inputReader = GetComponent<PlayerInputReader>();
+
+        if (settings == null)
+        {
+            var blink = GetComponent<BlinkSystem>();
+            if (blink != null && blink.Settings != null)
+                settings = blink.Settings;
+        }
     }
 
     private void Update()
@@ -25,8 +45,8 @@ public sealed class PlayerMovement : MonoBehaviour
         if (characterController.isGrounded && verticalVelocity < 0f)
             verticalVelocity = -2f;
 
-        verticalVelocity += gravity * Time.deltaTime;
-        Vector3 velocity = planarVelocity * walkSpeed;
+        verticalVelocity += Gravity * Time.deltaTime;
+        Vector3 velocity = planarVelocity * WalkSpeed;
         velocity.y = verticalVelocity;
         characterController.Move(velocity * Time.deltaTime);
     }
