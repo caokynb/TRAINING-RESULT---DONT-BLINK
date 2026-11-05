@@ -20,6 +20,8 @@ public sealed class TutorialScreenView : MonoBehaviour
     private float previousTimeScale;
     private bool isShowingTutorial;
 
+    public bool IsShowingTutorial => isShowingTutorial;
+
     private void Awake()
     {
         inputReader = GetComponent<PlayerInputReader>();
