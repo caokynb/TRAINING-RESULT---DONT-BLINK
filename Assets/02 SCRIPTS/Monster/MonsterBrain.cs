@@ -20,6 +20,9 @@ public class MonsterBrain : MonoBehaviour
     [SerializeField] private float holdAcceleration = 0.18f;
     [SerializeField] private float simulatedBlinkDuration = 0.25f;
     [SerializeField] private UnityEvent onPlayerCaught;
+    [Header("Model Facing Direction")]
+    [Tooltip("The local direction the monster face points in (default -Z)")]
+    [SerializeField] private Vector3 modelFaceDirection = new Vector3(0f, 0f, -1f);
 
     private MapGrid mapGrid;
     private Transform playerTransform;
@@ -258,6 +261,16 @@ public class MonsterBrain : MonoBehaviour
         if (playerTransform == null)
             return;
 
+        // 1. Direct pursuit if there is unobstructed line-of-sight to the player in open room/corridor
+        if (HasLineOfSightToPlayer())
+        {
+            MoveDirectTowardsPlayer(steps);
+            FacePlayer();
+            CheckCatchDistance();
+            return;
+        }
+
+        // 2. Otherwise navigate around walls using 8-directional A* optimal path
         if (mapGrid != null && mapGrid.IsLoaded)
         {
             Vector2Int monsterCell = mapGrid.WorldToCell(transform.position);
@@ -298,6 +311,38 @@ public class MonsterBrain : MonoBehaviour
         CheckCatchDistance();
     }
 
+    private bool HasLineOfSightToPlayer()
+    {
+        if (playerTransform == null)
+            return false;
+
+        if (mapGrid != null && mapGrid.IsLoaded)
+        {
+            Vector2Int monsterCell = mapGrid.WorldToCell(transform.position);
+            Vector2Int playerCell = mapGrid.WorldToCell(playerTransform.position);
+            if (!mapGrid.HasLineOfSight(monsterCell, playerCell))
+                return false;
+        }
+
+        Vector3 from = transform.position + Vector3.up * 1.5f;
+        Vector3 to = playerTransform.position + Vector3.up * 1.5f;
+        Vector3 dir = to - from;
+        float dist = dir.magnitude;
+
+        if (dist > 0.1f)
+        {
+            if (Physics.Raycast(from, dir.normalized, out RaycastHit hit, dist))
+            {
+                if (!hit.transform.CompareTag("Player") && hit.transform.root != playerTransform.root)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     private void MoveInsidePlayerCell()
     {
         Vector3 playerPos = playerTransform.position;
@@ -331,6 +376,16 @@ public class MonsterBrain : MonoBehaviour
 
     private void MoveMonsterTo(Vector3 targetPosition)
     {
+        float floorY = mapGrid != null ? mapGrid.transform.position.y : transform.position.y;
+        if (Physics.Raycast(new Vector3(targetPosition.x, floorY + 2f, targetPosition.z), Vector3.down, out RaycastHit hit, 5f))
+        {
+            targetPosition.y = hit.point.y;
+        }
+        else
+        {
+            targetPosition.y = floorY;
+        }
+
         CharacterController cc = GetComponent<CharacterController>();
         if (cc != null && cc.enabled)
         {
@@ -360,7 +415,9 @@ public class MonsterBrain : MonoBehaviour
         direction.y = 0f;
         if (direction.sqrMagnitude > 0.0001f)
         {
-            transform.rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+            Quaternion lookRot = Quaternion.LookRotation(direction.normalized, Vector3.up);
+            Quaternion modelOffset = Quaternion.FromToRotation(modelFaceDirection.normalized, Vector3.forward);
+            transform.rotation = lookRot * modelOffset;
         }
     }
 

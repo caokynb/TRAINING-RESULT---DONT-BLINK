@@ -38,8 +38,17 @@ public class MonsterSpawner : MonoBehaviour
 
         bool hasSpawnTarget = TryGetSpawnTransform(out Vector3 spawnPos, out Quaternion spawnRot);
         MapGrid mapGrid = Object.FindFirstObjectByType<MapGrid>();
-        float floorY = mapGrid != null ? mapGrid.transform.position.y : 0f;
-        Vector3 finalSpawnPos = new Vector3(spawnPos.x, floorY + 1f, spawnPos.z);
+        
+        // Ground calculation: use spawn marker's Y if present, otherwise mapGrid.transform.position.y
+        float floorY = hasSpawnTarget ? spawnPos.y : (mapGrid != null ? mapGrid.transform.position.y : 0f);
+
+        // Snap precisely to the floor surface via raycast
+        if (Physics.Raycast(new Vector3(spawnPos.x, floorY + 2f, spawnPos.z), Vector3.down, out RaycastHit hit, 5f))
+        {
+            floorY = hit.point.y;
+        }
+
+        Vector3 finalSpawnPos = new Vector3(spawnPos.x, floorY, spawnPos.z);
 
         GameObject existingMonster = FindExistingMonsterInScene();
         if (existingMonster != null)
