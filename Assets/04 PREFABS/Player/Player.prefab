@@ -277,6 +277,24 @@ MonoBehaviour:
   fadeDuration: 0.08
   fatigueBarSize: {x: 64, y: 720}
   redTransitionStart: 0.5
+  darknessStart: 0.5
+  maxDarknessAlpha: 0.6
+  darknessColor: {r: 0, g: 0, b: 0, a: 1}
+  redVignetteStart: 0.65
+  maxRedAlpha: 0.75
+  redVignetteColor: {r: 0.6039216, g: 0.05, b: 0.05, a: 1}
+  effectFadeSpeed: 2
+  pulseRedOnHighFatigue: 1
+  pulseMinProgress: 0.5
+  pulseSpeed: 6
+  pulseAmplitude: 0.15
+  shakeStart: 0.75
+  maxShakePosition: 0.02
+  maxShakeAngle: 0.6
+  shakeFrequency: 18
+  cameraRecoveryPositionSpeed: 1
+  cameraRecoveryRotationSpeed: 30
+  vignetteInnerRadius: 0.2
 --- !u!114 &923456789123456789
 MonoBehaviour:
   m_ObjectHideFlags: 0
