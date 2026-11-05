@@ -146,7 +146,7 @@ public sealed class TutorialScreenView : MonoBehaviour
 
     private void ShowTutorial()
     {
-        previousTimeScale = Time.timeScale;
+        previousTimeScale = 1f;
         isShowingTutorial = true;
         Time.timeScale = 0f;
 

@@ -12,15 +12,21 @@ public sealed class PauseMenuView : MonoBehaviour
     [Tooltip("Nút tiếp tục trò chơi.")]
     [SerializeField] private Button resumeButton;
 
-    [Tooltip("Nút chơi lại từ đầu.")]
+    [Tooltip("Nút chơi lại màn hiện tại.")]
     [SerializeField] private Button restartButton;
+
+    [Tooltip("Nút quay về menu chính (tùy chọn).")]
+    [SerializeField] private Button mainMenuButton;
 
     [Tooltip("Nút thoát trò chơi.")]
     [SerializeField] private Button quitButton;
 
     [Header("Configuration")]
-    [Tooltip("Tên scene chính để nạp lại khi bấm Chơi lại.")]
+    [Tooltip("Tên scene gameplay chính để nạp lại khi bấm Chơi lại.")]
     [SerializeField] private string mainSceneName = "Main";
+
+    [Tooltip("Tên scene menu chính để quay về.")]
+    [SerializeField] private string mainMenuSceneName = "MainMenu";
 
     public bool IsPaused => isPaused;
 
@@ -49,6 +55,9 @@ public sealed class PauseMenuView : MonoBehaviour
         if (restartButton != null)
             restartButton.onClick.AddListener(RestartGame);
 
+        if (mainMenuButton != null)
+            mainMenuButton.onClick.AddListener(ReturnToMainMenu);
+
         if (quitButton != null)
             quitButton.onClick.AddListener(QuitGame);
     }
@@ -63,6 +72,9 @@ public sealed class PauseMenuView : MonoBehaviour
 
         if (restartButton != null)
             restartButton.onClick.RemoveListener(RestartGame);
+
+        if (mainMenuButton != null)
+            mainMenuButton.onClick.RemoveListener(ReturnToMainMenu);
 
         if (quitButton != null)
             quitButton.onClick.RemoveListener(QuitGame);
@@ -150,6 +162,12 @@ public sealed class PauseMenuView : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(mainSceneName, LoadSceneMode.Single);
+    }
+
+    public void ReturnToMainMenu()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene(mainMenuSceneName, LoadSceneMode.Single);
     }
 
     public void QuitGame()
