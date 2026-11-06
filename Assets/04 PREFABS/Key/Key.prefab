@@ -59,6 +59,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0397352ddd9eb1f42b26356f8501ae1b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 709906437618982167}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0397352ddd9eb1f42b26356f8501ae1b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 709906437618982168}
   m_SourcePrefab: {fileID: 100100000, guid: 0397352ddd9eb1f42b26356f8501ae1b, type: 3}
 --- !u!1 &8155171625173942303 stripped
 GameObject:
@@ -84,5 +87,21 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.15, y: 0.15, z: 0.2}
+  m_Size: {x: 0.25, y: 0.25, z: 0.3}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &709906437618982168
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8155171625173942303}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b789101112131415key1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::KeyPickup
+  enableHover: 1
+  rotateSpeed: 60
+  bobAmplitude: 0.04
+  bobFrequency: 2

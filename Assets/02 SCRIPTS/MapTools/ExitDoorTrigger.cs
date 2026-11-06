@@ -27,6 +27,11 @@ public class ExitDoorTrigger : MonoBehaviour
         GameObject hostObj = exitZoneObj != null ? exitZoneObj : doorObj;
         ExitDoorTrigger trigger = hostObj.AddComponent<ExitDoorTrigger>();
         trigger.SetupReferences(doorObj != null ? doorObj.transform : null, exitZoneObj);
+
+        if (doorObj != null && doorObj.GetComponent<ExitDoorController>() == null)
+        {
+            doorObj.AddComponent<ExitDoorController>();
+        }
     }
 
     public void SetupReferences(Transform door, GameObject exitZoneObj)
@@ -253,6 +258,18 @@ public class ExitDoorTrigger : MonoBehaviour
     {
         if (hasOpenedDoor)
             return;
+
+        ExitDoorController doorCtrl = doorTransform != null 
+            ? doorTransform.GetComponentInParent<ExitDoorController>() 
+            : Object.FindFirstObjectByType<ExitDoorController>();
+
+        if (doorCtrl != null && !doorCtrl.IsOpen)
+        {
+            if (!doorCtrl.TryInteractDoor())
+            {
+                return;
+            }
+        }
 
         hasOpenedDoor = true;
         Debug.Log("mở cửa");
