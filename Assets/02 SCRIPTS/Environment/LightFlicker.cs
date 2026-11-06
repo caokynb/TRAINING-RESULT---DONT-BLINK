@@ -172,6 +172,10 @@ public class LightFlicker : MonoBehaviour
             {
                 float dimmedRatio = Random.value < 0.6f ? minIntensityRatio : Random.Range(minIntensityRatio, 0.6f);
                 SetLightRatio(dimmedRatio);
+                if (AudioManager.Instance != null && (i == 0 || Random.value < 0.45f))
+                {
+                    AudioManager.Instance.PlayLightFlicker(transform.position);
+                }
                 yield return new WaitForSeconds(Random.Range(flickerSpeed * 0.5f, flickerSpeed * 1.5f));
 
                 SetLightRatio(Random.Range(0.7f, 1.1f));

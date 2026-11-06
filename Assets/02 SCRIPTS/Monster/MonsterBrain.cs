@@ -36,6 +36,14 @@ public class MonsterBrain : MonoBehaviour
     [Tooltip("The local direction the monster face points in (default -Z)")]
     [SerializeField] private Vector3 modelFaceDirection = new Vector3(0f, 0f, -1f);
 
+    [Header("Audio (T12)")]
+    [SerializeField] private AudioSource monsterAudioSource;
+    [SerializeField] private AudioClip footstepsClip;
+    [Range(0f, 1f)]
+    [SerializeField] private float footstepsVolume = 0.85f;
+    [SerializeField] private float minFootstepDistance = 2f;
+    [SerializeField] private float maxFootstepDistance = 30f;
+
     private MapGrid mapGrid;
     private Transform playerTransform;
     private BlinkSystem blinkSystem;
@@ -69,8 +77,27 @@ public class MonsterBrain : MonoBehaviour
     public float CurrentDifficulty => settings != null ? settings.EvaluateDifficulty(TimeSinceGracePeriod) : 0f;
     public int CurrentBonusSteps => settings != null ? settings.GetBonusSteps(TimeSinceGracePeriod) : 0;
 
+    private void SetupMonsterAudio()
+    {
+        if (monsterAudioSource == null)
+            monsterAudioSource = GetComponent<AudioSource>();
+        if (monsterAudioSource == null)
+            monsterAudioSource = gameObject.AddComponent<AudioSource>();
+
+        monsterAudioSource.playOnAwake = false;
+        monsterAudioSource.spatialBlend = 1f; // 3D spatial
+        monsterAudioSource.rolloffMode = AudioRolloffMode.Logarithmic;
+        monsterAudioSource.minDistance = minFootstepDistance;
+        monsterAudioSource.maxDistance = maxFootstepDistance;
+        monsterAudioSource.dopplerLevel = 0f;
+
+        if (footstepsClip == null && AudioManager.Instance != null)
+            footstepsClip = AudioManager.Instance.MonsterFootstepsClip;
+    }
+
     private void Awake()
     {
+        SetupMonsterAudio();
         mapGrid = Object.FindFirstObjectByType<MapGrid>();
         ResolvePlayer();
     }
@@ -94,6 +121,7 @@ public class MonsterBrain : MonoBehaviour
         BlinkEvents.OnEyesClosed -= HandleEyesClosed;
         BlinkEvents.OnEyesOpened -= HandleEyesOpened;
         GameEvents.OnPlayerCaught -= Die;
+        StopFootstepSound();
     }
 
     private void Update()
@@ -117,6 +145,7 @@ public class MonsterBrain : MonoBehaviour
                 wasEyesClosed = false;
                 holdStepTimer = 0f;
                 closedDuration = 0f;
+                StopFootstepSound();
                 FacePlayer();
             }
             return;
@@ -192,6 +221,7 @@ public class MonsterBrain : MonoBehaviour
         wasEyesClosed = false;
         holdStepTimer = 0f;
         closedDuration = 0f;
+        StopFootstepSound();
         FacePlayer();
         Debug.Log("[MonsterBrain] Eyes Opened");
     }
@@ -199,7 +229,37 @@ public class MonsterBrain : MonoBehaviour
     private void Die()
     {
         Debug.Log("Die");
+        StopFootstepSound();
         onPlayerCaught?.Invoke();
+    }
+
+    private void PlayFootstepSound()
+    {
+        if (monsterAudioSource == null)
+            SetupMonsterAudio();
+
+        if (footstepsClip == null && AudioManager.Instance != null)
+            footstepsClip = AudioManager.Instance.MonsterFootstepsClip;
+
+        if (monsterAudioSource != null && footstepsClip != null)
+        {
+            monsterAudioSource.clip = footstepsClip;
+            monsterAudioSource.volume = footstepsVolume;
+            monsterAudioSource.pitch = Random.Range(0.95f, 1.05f);
+
+            if (!monsterAudioSource.isPlaying)
+            {
+                monsterAudioSource.Play();
+            }
+        }
+    }
+
+    private void StopFootstepSound()
+    {
+        if (monsterAudioSource != null && monsterAudioSource.isPlaying)
+        {
+            monsterAudioSource.Stop();
+        }
     }
 
     private int GetInitialBlinkSteps(int cellDist)
@@ -292,6 +352,9 @@ public class MonsterBrain : MonoBehaviour
     {
         if (steps <= 0 || hasCaughtPlayer)
             return;
+
+        // T12: Monster footsteps sound plays only when stepping during closed eyes
+        PlayFootstepSound();
 
         if (mapGrid == null)
             mapGrid = Object.FindFirstObjectByType<MapGrid>();

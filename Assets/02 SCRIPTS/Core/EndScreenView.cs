@@ -65,6 +65,7 @@ public sealed class EndScreenView : MonoBehaviour
 
     private void ReloadMainScene()
     {
+        AudioManager.Instance?.PlayUIClick();
         Time.timeScale = 1f;
         SceneManager.LoadScene(mainSceneName, LoadSceneMode.Single);
     }

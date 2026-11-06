@@ -162,6 +162,7 @@ public sealed class TutorialScreenView : MonoBehaviour
             return;
 
         isShowingTutorial = false;
+        AudioManager.Instance?.PlayUIClick();
         Time.timeScale = previousTimeScale;
         playerMovement.SetMovementLocked(false);
         playerLook.enabled = true;

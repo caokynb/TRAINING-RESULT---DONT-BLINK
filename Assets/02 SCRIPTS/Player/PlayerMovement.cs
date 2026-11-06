@@ -9,6 +9,8 @@ public sealed class PlayerMovement : MonoBehaviour
     [Header("Fallbacks (Used if Settings is not assigned)")]
     [SerializeField, Min(0f)] private float walkSpeed = 4f;
     [SerializeField] private float gravity = -20f;
+    [SerializeField] private float footstepInterval = 0.45f;
+    private float footstepTimer;
 
     public GameSettings Settings
     {
@@ -49,6 +51,20 @@ public sealed class PlayerMovement : MonoBehaviour
         Vector3 velocity = planarVelocity * WalkSpeed;
         velocity.y = verticalVelocity;
         characterController.Move(velocity * Time.deltaTime);
+
+        if (characterController.isGrounded && input.sqrMagnitude > 0.01f && !isMovementLocked)
+        {
+            footstepTimer -= Time.deltaTime;
+            if (footstepTimer <= 0f)
+            {
+                footstepTimer = footstepInterval;
+                AudioManager.Instance?.PlayPlayerFootstep(transform.position);
+            }
+        }
+        else
+        {
+            footstepTimer = 0.05f;
+        }
     }
 
     public void SetMovementLocked(bool isLocked)
