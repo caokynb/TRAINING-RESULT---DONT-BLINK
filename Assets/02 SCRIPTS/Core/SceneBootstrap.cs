@@ -78,6 +78,15 @@ public sealed class SceneBootstrap : MonoBehaviour
         player.name = playerPrefab.name;
         DisableOtherCamerasAndAudioListeners(player.transform);
         EnsurePlayerPostProcessing(player);
+
+        if (player.GetComponent<PlayerInteractor>() == null)
+        {
+            player.AddComponent<PlayerInteractor>();
+        }
+        if (Object.FindFirstObjectByType<KeyInventory>() == null)
+        {
+            player.AddComponent<KeyInventory>();
+        }
     }
 
     private Transform FindSpawnMarker(Scene scene)

@@ -2,7 +2,7 @@ using System.Collections;
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public class ExitDoorController : MonoBehaviour
+public class ExitDoorController : MonoBehaviour, IInteractable
 {
     [Header("Door Leaf Reference")]
     [Tooltip("Cánh cửa (Plane.001) đã được đặt pivot tại bản lề")]
@@ -26,11 +26,17 @@ public class ExitDoorController : MonoBehaviour
 
     public bool IsOpen => isOpen;
     public bool RequiresKey { get => requiresKey; set => requiresKey = value; }
+    public bool HasKey => hasKey;
 
     private void Awake()
     {
         ResolveDoorLeaf();
         CacheRotations();
+
+        if (KeyInventory.Instance != null && KeyInventory.Instance.HasKey)
+        {
+            hasKey = true;
+        }
     }
 
     private void OnEnable()
@@ -89,12 +95,38 @@ public class ExitDoorController : MonoBehaviour
         }
     }
 
+    // Triển khai IInteractable
+    public string GetInteractionPrompt()
+    {
+        if (isOpen)
+            return string.Empty;
+
+        bool playerHoldsKey = hasKey || (KeyInventory.Instance != null && KeyInventory.Instance.HasKey);
+        if (requiresKey && !playerHoldsKey)
+        {
+            return "Cửa bị khóa (Cần chìa khóa)";
+        }
+
+        return "Chuột trái / E: Mở cửa";
+    }
+
+    public bool CanInteract()
+    {
+        return !isOpen;
+    }
+
+    public void Interact()
+    {
+        TryInteractDoor();
+    }
+
     public bool TryInteractDoor()
     {
         if (isOpen)
             return true;
 
-        if (requiresKey && !hasKey)
+        bool playerHoldsKey = hasKey || (KeyInventory.Instance != null && KeyInventory.Instance.HasKey);
+        if (requiresKey && !playerHoldsKey)
         {
             Debug.Log("[ExitDoorController] Cửa bị khóa! Cần tìm chìa khóa trước.");
             GameEvents.RaiseDoorLocked();

@@ -31,6 +31,15 @@ public sealed class PlayerMovement : MonoBehaviour
         characterController = GetComponent<CharacterController>();
         inputReader = GetComponent<PlayerInputReader>();
 
+        if (GetComponent<PlayerInteractor>() == null)
+        {
+            gameObject.AddComponent<PlayerInteractor>();
+        }
+        if (KeyInventory.Instance == null && GetComponent<KeyInventory>() == null)
+        {
+            gameObject.AddComponent<KeyInventory>();
+        }
+
         if (settings == null)
         {
             var blink = GetComponent<BlinkSystem>();
