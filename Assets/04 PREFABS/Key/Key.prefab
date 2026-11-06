@@ -98,7 +98,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8155171625173942303}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b789101112131415key1, type: 3}
+  m_Script: {fileID: 11500000, guid: b1c2d3e4f5a6b7891011121314150001, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::KeyPickup
   enableHover: 1
