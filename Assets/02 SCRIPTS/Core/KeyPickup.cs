@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [DisallowMultipleComponent]
-public class KeyPickup : MonoBehaviour
+public class KeyPickup : MonoBehaviour, IInteractable
 {
     [Header("Hover Animation")]
     [SerializeField] private bool enableHover = true;
@@ -38,7 +38,17 @@ public class KeyPickup : MonoBehaviour
         }
     }
 
-    // Dùng cho tương tác Raycast của Kỳ (K23 / K25)
+    // Triển khai IInteractable cho Raycast
+    public string GetInteractionPrompt()
+    {
+        return "Chuột trái / E: Nhặt chìa khóa";
+    }
+
+    public bool CanInteract()
+    {
+        return !isCollected;
+    }
+
     public void Interact()
     {
         if (isCollected)
@@ -54,6 +64,12 @@ public class KeyPickup : MonoBehaviour
 
         isCollected = true;
         Debug.Log("[KeyPickup] Người chơi đã nhặt chìa khóa!");
+
+        if (KeyInventory.Instance != null)
+        {
+            KeyInventory.Instance.SetHasKey(true);
+        }
+
         GameEvents.RaiseKeyPickedUp();
         gameObject.SetActive(false);
     }

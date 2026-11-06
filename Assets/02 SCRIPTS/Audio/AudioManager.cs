@@ -136,6 +136,9 @@ public class AudioManager : MonoBehaviour
         BlinkEvents.OnEyesOpened += HandleEyesOpened;
         GameEvents.OnPlayerCaught += HandlePlayerCaught;
         GameEvents.OnPlayerReachedExit += HandlePlayerReachedExit;
+        GameEvents.OnKeyPickedUp += HandleKeyPickedUp;
+        GameEvents.OnDoorOpened += HandleDoorOpened;
+        GameEvents.OnDoorLocked += HandleDoorLocked;
     }
 
     private void OnDisable()
@@ -144,6 +147,9 @@ public class AudioManager : MonoBehaviour
         BlinkEvents.OnEyesOpened -= HandleEyesOpened;
         GameEvents.OnPlayerCaught -= HandlePlayerCaught;
         GameEvents.OnPlayerReachedExit -= HandlePlayerReachedExit;
+        GameEvents.OnKeyPickedUp -= HandleKeyPickedUp;
+        GameEvents.OnDoorOpened -= HandleDoorOpened;
+        GameEvents.OnDoorLocked -= HandleDoorLocked;
     }
 
     private void Update()
@@ -345,6 +351,33 @@ public class AudioManager : MonoBehaviour
         Vector3 doorPos = playerTransform != null ? playerTransform.position : Vector3.zero;
         PlayExitDoor(doorPos);
         PlayVictory();
+    }
+
+    private void HandleKeyPickedUp()
+    {
+        // T20: Âm thanh nhặt chìa khóa
+        if (uiClickClip != null && sfx2DSource != null)
+        {
+            sfx2DSource.pitch = 1.35f;
+            sfx2DSource.PlayOneShot(uiClickClip, 1.0f);
+            sfx2DSource.pitch = 1.0f;
+        }
+    }
+
+    private void HandleDoorOpened()
+    {
+        // T20: Âm thanh mở cửa
+    }
+
+    private void HandleDoorLocked()
+    {
+        // T20: Âm thanh cửa khóa (tiếng cạch nặng)
+        if (uiClickClip != null && sfx2DSource != null)
+        {
+            sfx2DSource.pitch = 0.65f;
+            sfx2DSource.PlayOneShot(uiClickClip, 0.85f);
+            sfx2DSource.pitch = 1.0f;
+        }
     }
 
     // --- Dynamic Panic Heartbeat Update (SFX_06) ---
