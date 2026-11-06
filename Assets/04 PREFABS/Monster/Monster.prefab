@@ -70,6 +70,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1b2c3d4e5f6478990123456789abc01, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MonsterBrain
+  settings: {fileID: 11400000, guid: 7e928859c6145dc41bfae2e6a03b442f, type: 2}
   initialGracePeriod: 10
   catchDistance: 1.8
   nearCellThreshold: 4
@@ -183,19 +184,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6386199475376754525, guid: 3c151d5153261fa4e89f526a7ac93472, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9854374
+      value: 0.9816955
       objectReference: {fileID: 0}
     - target: {fileID: 6386199475376754525, guid: 3c151d5153261fa4e89f526a7ac93472, type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.1700386
+      value: -0.19045714
       objectReference: {fileID: 0}
     - target: {fileID: 6386199475376754525, guid: 3c151d5153261fa4e89f526a7ac93472, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.0001786118
+      value: 0.00044645448
       objectReference: {fileID: 0}
     - target: {fileID: 6386199475376754525, guid: 3c151d5153261fa4e89f526a7ac93472, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.00006487507
+      value: 0.00016210458
       objectReference: {fileID: 0}
     - target: {fileID: 6894674121372093642, guid: 3c151d5153261fa4e89f526a7ac93472, type: 3}
       propertyPath: m_LocalPosition.x

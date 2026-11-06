@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3b4a591b0519fa46abbee045af99db0, type: 3}
+  m_Name: MonsterSettings
+  m_EditorClassIdentifier: Assembly-CSharp::MonsterSettings
+  initialGracePeriod: 10
+  catchDistance: 1.8
+  nearBlinkSteps: 1
+  normalMinBlinkSteps: 1
+  normalMaxBlinkSteps: 2
+  farBlinkSteps: 3
+  nearHoldStepInterval: 0.45
+  normalHoldStepInterval: 0.35
+  farHoldStepInterval: 0.2
+  minHoldStepInterval: 0.1
+  holdAcceleration: 0.18
+  nearCellThreshold: 4
+  farCellThreshold: 10
+  enableDifficultyScaling: 1
+  timeToMaxDifficulty: 180
+  difficultyCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 1
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxBonusSteps: 2
+  holdIntervalScaleAtMax: 0.7

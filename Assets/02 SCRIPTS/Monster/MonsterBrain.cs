@@ -5,21 +5,33 @@ using UnityEngine.InputSystem;
 
 public class MonsterBrain : MonoBehaviour
 {
+    [Header("Settings")]
+    [Tooltip("Cấu hình quái vật và độ khó (ScriptableObject). Nếu để trống, sẽ dùng các thông số mặc định bên dưới.")]
+    [SerializeField] private MonsterSettings settings;
+
+    [Header("Grace Period & Catch (Fallbacks)")]
     [SerializeField] private float initialGracePeriod = 10f;
     [SerializeField] private float catchDistance = 1.8f;
+
+    [Header("Step Counts (Fallbacks)")]
     [SerializeField] private int nearCellThreshold = 4;
     [SerializeField] private int farCellThreshold = 10;
     [SerializeField] private int nearBlinkSteps = 1;
     [SerializeField] private int normalMinBlinkSteps = 1;
     [SerializeField] private int normalMaxBlinkSteps = 2;
     [SerializeField] private int farBlinkSteps = 3;
+
+    [Header("Hold Intervals (Fallbacks)")]
     [SerializeField] private float nearHoldStepInterval = 0.45f;
     [SerializeField] private float normalHoldStepInterval = 0.35f;
     [SerializeField] private float farHoldStepInterval = 0.2f;
     [SerializeField] private float minHoldStepInterval = 0.1f;
     [SerializeField] private float holdAcceleration = 0.18f;
+
+    [Header("Debug & Events")]
     [SerializeField] private float simulatedBlinkDuration = 0.25f;
     [SerializeField] private UnityEvent onPlayerCaught;
+
     [Header("Model Facing Direction")]
     [Tooltip("The local direction the monster face points in (default -Z)")]
     [SerializeField] private Vector3 modelFaceDirection = new Vector3(0f, 0f, -1f);
@@ -32,6 +44,30 @@ public class MonsterBrain : MonoBehaviour
     private float closedDuration;
     private bool wasEyesClosed;
     private bool hasCaughtPlayer;
+
+    public MonsterSettings Settings
+    {
+        get => settings;
+        set => settings = value;
+    }
+
+    public float InitialGracePeriod => settings != null ? settings.InitialGracePeriod : initialGracePeriod;
+    public float CatchDistance => settings != null ? settings.CatchDistance : catchDistance;
+    public int NearCellThreshold => settings != null ? settings.NearCellThreshold : nearCellThreshold;
+    public int FarCellThreshold => settings != null ? settings.FarCellThreshold : farCellThreshold;
+    public int NearBlinkSteps => settings != null ? settings.NearBlinkSteps : nearBlinkSteps;
+    public int NormalMinBlinkSteps => settings != null ? settings.NormalMinBlinkSteps : normalMinBlinkSteps;
+    public int NormalMaxBlinkSteps => settings != null ? settings.NormalMaxBlinkSteps : normalMaxBlinkSteps;
+    public int FarBlinkSteps => settings != null ? settings.FarBlinkSteps : farBlinkSteps;
+    public float NearHoldStepInterval => settings != null ? settings.NearHoldStepInterval : nearHoldStepInterval;
+    public float NormalHoldStepInterval => settings != null ? settings.NormalHoldStepInterval : normalHoldStepInterval;
+    public float FarHoldStepInterval => settings != null ? settings.FarHoldStepInterval : farHoldStepInterval;
+    public float MinHoldStepInterval => settings != null ? settings.MinHoldStepInterval : minHoldStepInterval;
+    public float HoldAcceleration => settings != null ? settings.HoldAcceleration : holdAcceleration;
+
+    public float TimeSinceGracePeriod => Mathf.Max(0f, (Time.time - spawnTime) - InitialGracePeriod);
+    public float CurrentDifficulty => settings != null ? settings.EvaluateDifficulty(TimeSinceGracePeriod) : 0f;
+    public int CurrentBonusSteps => settings != null ? settings.GetBonusSteps(TimeSinceGracePeriod) : 0;
 
     private void Awake()
     {
@@ -101,9 +137,10 @@ public class MonsterBrain : MonoBehaviour
 
         int cellDist = GetCurrentCellDistance();
         float baseInterval = GetBaseIntervalByDistance(cellDist);
+        float intervalMult = settings != null ? settings.GetHoldIntervalMultiplier(TimeSinceGracePeriod) : 1f;
         float currentInterval = Mathf.Max(
-            minHoldStepInterval,
-            baseInterval - closedDuration * holdAcceleration
+            MinHoldStepInterval,
+            (baseInterval - closedDuration * HoldAcceleration) * intervalMult
         );
 
         if (holdStepTimer >= currentInterval)
@@ -167,38 +204,43 @@ public class MonsterBrain : MonoBehaviour
 
     private int GetInitialBlinkSteps(int cellDist)
     {
-        if (cellDist <= nearCellThreshold)
-            return nearBlinkSteps;
+        int baseSteps;
+        if (cellDist <= NearCellThreshold)
+            baseSteps = NearBlinkSteps;
+        else if (cellDist >= FarCellThreshold * 2)
+            baseSteps = FarBlinkSteps + 1;
+        else if (cellDist >= FarCellThreshold)
+            baseSteps = FarBlinkSteps;
+        else
+            baseSteps = Random.Range(NormalMinBlinkSteps, NormalMaxBlinkSteps + 1);
 
-        if (cellDist >= farCellThreshold * 2)
-            return farBlinkSteps + 1;
-
-        if (cellDist >= farCellThreshold)
-            return farBlinkSteps;
-
-        return Random.Range(normalMinBlinkSteps, normalMaxBlinkSteps + 1);
+        int bonusSteps = settings != null ? settings.GetBonusSteps(TimeSinceGracePeriod) : 0;
+        return baseSteps + bonusSteps;
     }
 
     private float GetBaseIntervalByDistance(int cellDist)
     {
-        if (cellDist <= nearCellThreshold)
-            return nearHoldStepInterval;
+        if (cellDist <= NearCellThreshold)
+            return NearHoldStepInterval;
 
-        if (cellDist >= farCellThreshold)
-            return farHoldStepInterval;
+        if (cellDist >= FarCellThreshold)
+            return FarHoldStepInterval;
 
-        return normalHoldStepInterval;
+        return NormalHoldStepInterval;
     }
 
     private int GetHoldSteps(int cellDist, float heldTime)
     {
-        if (cellDist <= nearCellThreshold)
-            return heldTime >= 1.2f ? 2 : 1;
+        int baseSteps;
+        if (cellDist <= NearCellThreshold)
+            baseSteps = heldTime >= 1.2f ? 2 : 1;
+        else if (cellDist >= FarCellThreshold)
+            baseSteps = heldTime >= 0.6f ? 3 : 2;
+        else
+            baseSteps = heldTime >= 0.8f ? 2 : 1;
 
-        if (cellDist >= farCellThreshold)
-            return heldTime >= 0.6f ? 3 : 2;
-
-        return heldTime >= 0.8f ? 2 : 1;
+        int bonusSteps = settings != null ? settings.GetBonusSteps(TimeSinceGracePeriod) : 0;
+        return baseSteps + (bonusSteps > 0 ? 1 : 0);
     }
 
     private int GetCurrentCellDistance()
@@ -243,7 +285,7 @@ public class MonsterBrain : MonoBehaviour
 
     private bool IsGracePeriodOver()
     {
-        return (Time.time - spawnTime) >= initialGracePeriod;
+        return (Time.time - spawnTime) >= InitialGracePeriod;
     }
 
     private void StepTowardsPlayer(int steps)
@@ -349,7 +391,7 @@ public class MonsterBrain : MonoBehaviour
         Vector3 toMonster = transform.position - playerPos;
         toMonster.y = 0f;
 
-        float stopDist = Mathf.Min(1.0f, catchDistance * 0.5f);
+        float stopDist = Mathf.Min(1.0f, CatchDistance * 0.5f);
         Vector3 dir = toMonster.sqrMagnitude > 0.001f ? toMonster.normalized : -playerTransform.forward;
         dir.y = 0f;
 
@@ -364,7 +406,7 @@ public class MonsterBrain : MonoBehaviour
         Vector3 currentXZ = new Vector3(transform.position.x, 0f, transform.position.z);
         Vector3 playerXZ = new Vector3(playerTransform.position.x, 0f, playerTransform.position.z);
         float dist = Vector3.Distance(currentXZ, playerXZ);
-        float stopDist = Mathf.Min(1.0f, catchDistance * 0.5f);
+        float stopDist = Mathf.Min(1.0f, CatchDistance * 0.5f);
 
         if (dist <= stopDist)
             return;
@@ -430,7 +472,7 @@ public class MonsterBrain : MonoBehaviour
         Vector2 playerXZ = new Vector2(playerTransform.position.x, playerTransform.position.z);
         float distance = Vector2.Distance(monsterXZ, playerXZ);
 
-        if (distance < catchDistance)
+        if (distance < CatchDistance)
         {
             hasCaughtPlayer = true;
             FacePlayer();
