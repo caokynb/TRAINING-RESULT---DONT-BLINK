@@ -38,7 +38,7 @@ public class MonsterSpawner : MonoBehaviour
 
         bool hasSpawnTarget = TryGetSpawnTransform(out Vector3 spawnPos, out Quaternion spawnRot);
         MapGrid mapGrid = Object.FindFirstObjectByType<MapGrid>();
-        
+
         // Ground calculation: use spawn marker's Y if present, otherwise mapGrid.transform.position.y
         float floorY = hasSpawnTarget ? spawnPos.y : (mapGrid != null ? mapGrid.transform.position.y : 0f);
 
@@ -54,7 +54,7 @@ public class MonsterSpawner : MonoBehaviour
         if (existingMonster != null)
         {
             spawnedMonster = existingMonster;
-            if (hasSpawnTarget)
+            if (hasSpawnTarget && Vector3.Distance(existingMonster.transform.position, finalSpawnPos) > 1.5f)
             {
                 TeleportMonster(spawnedMonster, finalSpawnPos, spawnRot);
             }
@@ -91,13 +91,7 @@ public class MonsterSpawner : MonoBehaviour
 
     private bool TryGetSpawnTransform(out Vector3 position, out Quaternion rotation)
     {
-        if (spawnPoint != null)
-        {
-            position = spawnPoint.position;
-            rotation = spawnPoint.rotation;
-            return true;
-        }
-
+        // 1. Prioritize marker in the scene (e.g. MonsterSpawn in Level01_Art)
         GameObject marker = FindExistingSpawnMarker(spawnTag);
         if (marker != null)
         {
@@ -106,13 +100,7 @@ public class MonsterSpawner : MonoBehaviour
             return true;
         }
 
-        if (transform.position.sqrMagnitude > 0.001f)
-        {
-            position = transform.position;
-            rotation = transform.rotation;
-            return true;
-        }
-
+        // 2. MapGrid 'M' cell definition
         MapGrid mapGrid = Object.FindFirstObjectByType<MapGrid>();
         if (mapGrid != null)
         {
@@ -127,6 +115,22 @@ public class MonsterSpawner : MonoBehaviour
             }
         }
 
+        // 3. Serialized spawnPoint (only if explicitly assigned and not pointing to self)
+        if (spawnPoint != null && spawnPoint != transform)
+        {
+            position = spawnPoint.position;
+            rotation = spawnPoint.rotation;
+            return true;
+        }
+
+        // 4. Fallback to this spawner's transform if non-zero
+        if (transform.position.sqrMagnitude > 0.001f)
+        {
+            position = transform.position;
+            rotation = transform.rotation;
+            return true;
+        }
+
         position = transform.position;
         rotation = transform.rotation;
         return false;
@@ -138,16 +142,20 @@ public class MonsterSpawner : MonoBehaviour
         {
             try
             {
-                GameObject tagged = GameObject.FindWithTag(tagOrName);
-                if (tagged != null)
-                    return tagged;
+                GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag(tagOrName);
+                foreach (GameObject obj in taggedObjects)
+                {
+                    // Ignore spawners that happen to be tagged MonsterSpawn
+                    if (obj != null && obj.GetComponent<MonsterSpawner>() == null)
+                        return obj;
+                }
             }
             catch
             {
             }
 
             GameObject exactNamed = GameObject.Find(tagOrName);
-            if (exactNamed != null)
+            if (exactNamed != null && exactNamed.GetComponent<MonsterSpawner>() == null)
                 return exactNamed;
         }
 
@@ -156,6 +164,9 @@ public class MonsterSpawner : MonoBehaviour
         {
             Transform t = allTransforms[i];
             if (t == null)
+                continue;
+
+            if (t.GetComponent<MonsterSpawner>() != null)
                 continue;
 
             if (t.name == "MonsterSpawn" || t.name.StartsWith("MonsterSpawn "))

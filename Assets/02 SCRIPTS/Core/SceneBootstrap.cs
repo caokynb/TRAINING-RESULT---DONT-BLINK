@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 
 public sealed class SceneBootstrap : MonoBehaviour
@@ -48,14 +49,18 @@ public sealed class SceneBootstrap : MonoBehaviour
             yield return loadOperation;
         }
 
-        if (!SceneManager.SetActiveScene(gameObject.scene))
+        // Set Level01_Art as the active scene so its Environment Lighting and Fog settings take effect
+        Scene artScene = SceneManager.GetSceneByName(spawnSceneName);
+        if (artScene.isLoaded)
         {
-            Debug.LogError("SceneBootstrap: Could not set Main as the active scene.", this);
-            yield break;
+            SceneManager.SetActiveScene(artScene);
+        }
+        else
+        {
+            SceneManager.SetActiveScene(gameObject.scene);
         }
 
-        Scene spawnScene = SceneManager.GetSceneByName(spawnSceneName);
-        Transform spawnMarker = FindSpawnMarker(spawnScene);
+        Transform spawnMarker = FindSpawnMarker(artScene);
         if (spawnMarker == null)
         {
             Debug.LogError(
@@ -72,6 +77,7 @@ public sealed class SceneBootstrap : MonoBehaviour
         GameObject player = Instantiate(playerPrefab, spawnMarker.position, spawnMarker.rotation);
         player.name = playerPrefab.name;
         DisableOtherCamerasAndAudioListeners(player.transform);
+        EnsurePlayerPostProcessing(player);
     }
 
     private Transform FindSpawnMarker(Scene scene)
@@ -103,6 +109,19 @@ public sealed class SceneBootstrap : MonoBehaviour
         {
             if (listener.transform != playerRoot && !listener.transform.IsChildOf(playerRoot))
                 listener.enabled = false;
+        }
+    }
+
+    private static void EnsurePlayerPostProcessing(GameObject playerRoot)
+    {
+        Camera playerCamera = playerRoot.GetComponentInChildren<Camera>();
+        if (playerCamera != null)
+        {
+            UniversalAdditionalCameraData cameraData = playerCamera.GetComponent<UniversalAdditionalCameraData>();
+            if (cameraData != null)
+            {
+                cameraData.renderPostProcessing = true;
+            }
         }
     }
 }
