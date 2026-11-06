@@ -49,14 +49,14 @@ MonoBehaviour:
   lightFlickerClip: {fileID: 8300000, guid: 77e524af4926bf846a29190ae3e767a1, type: 3}
   flickerVolume: 0.6
   monsterFootstepsClip: {fileID: 8300000, guid: 2f085a5fd5fb00e4b94722292573b4a7, type: 3}
-  monsterFootstepsVolume: 0.85
+  monsterFootstepsVolume: 1
   blinkAmbientClip: {fileID: 8300000, guid: 4acb443d26247da4294696c45331d51f, type: 3}
   blinkAmbientVolume: 0.5
   playerFootstepClips:
   - {fileID: 8300000, guid: b2bebfe31dd26764d93622f9a67d51d9, type: 3}
   - {fileID: 8300000, guid: dc432873d0e765b4b9a9c0eff19744cc, type: 3}
   - {fileID: 8300000, guid: b96a1cd076e2cca4fbff651e4bec953a, type: 3}
-  playerFootstepVolume: 0.45
+  playerFootstepVolume: 0.2
   panicHeartbeatClip: {fileID: 8300000, guid: 2840977692e768e478459c8be79edd65, type: 3}
   maxPanicVolume: 0.7
   panicDistanceNear: 2
