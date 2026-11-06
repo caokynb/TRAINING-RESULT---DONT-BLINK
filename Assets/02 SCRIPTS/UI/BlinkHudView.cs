@@ -55,13 +55,15 @@ public sealed class BlinkHudView : MonoBehaviour
     [Tooltip("Bán kính vùng trong suốt ở tâm vignette (0 - 0.6).")]
     [SerializeField, Range(0f, 0.6f)] private float vignetteInnerRadius = 0.2f;
 
+    [Header("UI Hierarchy References (Tùy chỉnh trong Editor)")]
+    [SerializeField] private Canvas hudCanvas;
+    [SerializeField] private Slider fatigueSlider;
+    [SerializeField] private Image fatigueFill;
+    [SerializeField] private Image darknessOverlay;
+    [SerializeField] private Image redVignetteOverlay;
+    [SerializeField] private Image closedEyesOverlay;
+
     private BlinkSystem blinkSystem;
-    private Slider fatigueSlider;
-    private Image fatigueFill;
-    private Image darknessOverlay;
-    private Image redVignetteOverlay;
-    private Image closedEyesOverlay;
-    private Canvas hudCanvas;
     private Sprite vignetteSprite;
 
     private float targetOverlayAlpha;
@@ -85,23 +87,31 @@ public sealed class BlinkHudView : MonoBehaviour
             initialCameraLocalRotation = cameraTransform.localRotation;
         }
 
-        vignetteSprite = CreateVignetteSprite(vignetteInnerRadius);
+        if (vignetteSprite == null)
+            vignetteSprite = CreateVignetteSprite(vignetteInnerRadius);
+
         BuildHud();
         SetOverlayAlpha(0f);
     }
 
     private void OnEnable()
     {
-        blinkSystem.FatigueChanged += UpdateFatigue;
-        blinkSystem.EyesClosedChanged += SetEyesClosed;
-        UpdateFatigue(blinkSystem.Fatigue);
-        SetEyesClosed(blinkSystem.IsBlinking);
+        if (blinkSystem != null)
+        {
+            blinkSystem.FatigueChanged += UpdateFatigue;
+            blinkSystem.EyesClosedChanged += SetEyesClosed;
+            UpdateFatigue(blinkSystem.Fatigue);
+            SetEyesClosed(blinkSystem.IsBlinking);
+        }
     }
 
     private void OnDisable()
     {
-        blinkSystem.FatigueChanged -= UpdateFatigue;
-        blinkSystem.EyesClosedChanged -= SetEyesClosed;
+        if (blinkSystem != null)
+        {
+            blinkSystem.FatigueChanged -= UpdateFatigue;
+            blinkSystem.EyesClosedChanged -= SetEyesClosed;
+        }
         ResetCameraShake();
     }
 
@@ -125,10 +135,12 @@ public sealed class BlinkHudView : MonoBehaviour
     {
         ResetCameraShake();
 
-        if (hudCanvas != null)
-            Destroy(hudCanvas.gameObject);
+        if (hudCanvas != null && Application.isPlaying)
+        {
+            // Không xóa nếu là đối tượng persistent
+        }
 
-        if (vignetteSprite != null)
+        if (vignetteSprite != null && Application.isPlaying)
         {
             if (vignetteSprite.texture != null)
                 Destroy(vignetteSprite.texture);
@@ -136,9 +148,85 @@ public sealed class BlinkHudView : MonoBehaviour
         }
     }
 
+    public bool ResolveExistingReferences()
+    {
+        if (hudCanvas == null)
+        {
+            Transform found = transform.Find("Blink HUD");
+            if (found != null)
+                hudCanvas = found.GetComponent<Canvas>();
+        }
+
+        if (hudCanvas == null)
+            return false;
+
+        if (fatigueSlider == null)
+            fatigueSlider = hudCanvas.GetComponentInChildren<Slider>(true);
+
+        if (fatigueSlider != null && fatigueSlider.fillRect != null)
+            fatigueFill = fatigueSlider.fillRect.GetComponent<Image>();
+
+        if (darknessOverlay == null)
+        {
+            Transform t = hudCanvas.transform.Find("Darkness Vignette Overlay");
+            if (t != null) darknessOverlay = t.GetComponent<Image>();
+        }
+
+        if (redVignetteOverlay == null)
+        {
+            Transform t = hudCanvas.transform.Find("Red Vignette Overlay");
+            if (t != null) redVignetteOverlay = t.GetComponent<Image>();
+        }
+
+        if (closedEyesOverlay == null)
+        {
+            Transform t = hudCanvas.transform.Find("Closed Eyes Overlay");
+            if (t != null) closedEyesOverlay = t.GetComponent<Image>();
+        }
+
+        return fatigueSlider != null;
+    }
+
+    [ContextMenu("Tạo / Hiển thị HUD trong Scene (Edit Mode)")]
+    public void SetupHudInEditor()
+    {
+        if (ResolveExistingReferences())
+        {
+            if (fatigueSlider != null)
+            {
+                fatigueSlider.gameObject.SetActive(true);
+                fatigueSlider.SetValueWithoutNotify(0.75f);
+                UpdateFatigue(0.75f);
+            }
+            return;
+        }
+
+        if (vignetteSprite == null)
+            vignetteSprite = CreateVignetteSprite(vignetteInnerRadius);
+
+        BuildHud();
+
+        if (fatigueSlider != null)
+        {
+            fatigueSlider.gameObject.SetActive(true);
+            fatigueSlider.SetValueWithoutNotify(0.75f);
+            UpdateFatigue(0.75f);
+        }
+
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(gameObject);
+        if (hudCanvas != null)
+            UnityEditor.EditorUtility.SetDirty(hudCanvas.gameObject);
+#endif
+    }
+
     private void BuildHud()
     {
+        if (ResolveExistingReferences())
+            return;
+
         GameObject canvasObject = new GameObject("Blink HUD", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler));
+        canvasObject.transform.SetParent(transform, false);
         hudCanvas = canvasObject.GetComponent<Canvas>();
         hudCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
         hudCanvas.sortingOrder = -1;
@@ -154,6 +242,8 @@ public sealed class BlinkHudView : MonoBehaviour
         // Lớp 1: Viền tối ngoại vi khi mỏi mắt
         darknessOverlay = CreateImage("Darkness Vignette Overlay", canvasObject.transform);
         StretchToParent(darknessOverlay.rectTransform);
+        if (vignetteSprite == null)
+            vignetteSprite = CreateVignetteSprite(vignetteInnerRadius);
         darknessOverlay.sprite = vignetteSprite;
         darknessOverlay.color = new Color(darknessColor.r, darknessColor.g, darknessColor.b, 0f);
         darknessOverlay.raycastTarget = false;
@@ -211,7 +301,7 @@ public sealed class BlinkHudView : MonoBehaviour
         fatigueSlider.transition = Selectable.Transition.None;
         fatigueSlider.targetGraphic = background;
         fatigueSlider.fillRect = fillRect;
-        fatigueSlider.SetValueWithoutNotify(blinkSystem.Fatigue);
+        fatigueSlider.SetValueWithoutNotify(blinkSystem != null ? blinkSystem.Fatigue : 0.75f);
     }
 
     private void UpdateFatigueVisualEffects()
@@ -223,13 +313,18 @@ public sealed class BlinkHudView : MonoBehaviour
         bool isClosed = blinkSystem.IsBlinking;
 
         // Viền tối ngoại vi
-        float targetDarkAlpha = 0f;
+        float targetDarkness = 0f;
         if (!isClosed && currentFatigue > darknessStart)
         {
             float t = Mathf.InverseLerp(darknessStart, 1f, currentFatigue);
-            targetDarkAlpha = t * maxDarknessAlpha;
+            targetDarkness = t * maxDarknessAlpha;
         }
-        currentDarknessAlpha = Mathf.MoveTowards(currentDarknessAlpha, targetDarkAlpha, Time.deltaTime * effectFadeSpeed);
+
+        currentDarknessAlpha = Mathf.MoveTowards(
+            currentDarknessAlpha,
+            targetDarkness,
+            Time.unscaledDeltaTime * effectFadeSpeed);
+
         if (darknessOverlay != null)
         {
             Color c = darknessColor;
@@ -238,20 +333,26 @@ public sealed class BlinkHudView : MonoBehaviour
         }
 
         // Viền đỏ căng thẳng
-        float targetRedAlpha = 0f;
+        float targetRed = 0f;
         if (!isClosed && currentFatigue > redVignetteStart)
         {
             float t = Mathf.InverseLerp(redVignetteStart, 1f, currentFatigue);
-            targetRedAlpha = t * maxRedAlpha;
+            float baseAlpha = t * maxRedAlpha;
 
-            if (pulseRedOnHighFatigue && t > pulseMinProgress)
+            if (pulseRedOnHighFatigue && t >= pulseMinProgress)
             {
-                float baseMultiplier = 1f - pulseAmplitude;
-                float pulse = baseMultiplier + pulseAmplitude * Mathf.Sin(Time.time * pulseSpeed);
-                targetRedAlpha *= pulse;
+                float pulse = Mathf.Sin(Time.time * pulseSpeed) * pulseAmplitude;
+                baseAlpha = Mathf.Clamp(baseAlpha + pulse, 0f, 1f);
             }
+
+            targetRed = baseAlpha;
         }
-        currentRedAlpha = Mathf.MoveTowards(currentRedAlpha, targetRedAlpha, Time.deltaTime * effectFadeSpeed);
+
+        currentRedAlpha = Mathf.MoveTowards(
+            currentRedAlpha,
+            targetRed,
+            Time.unscaledDeltaTime * effectFadeSpeed);
+
         if (redVignetteOverlay != null)
         {
             Color c = redVignetteColor;
@@ -266,25 +367,31 @@ public sealed class BlinkHudView : MonoBehaviour
             return;
 
         float currentFatigue = blinkSystem.Fatigue;
-        bool shouldShake = !blinkSystem.IsBlinking && currentFatigue > shakeStart;
+        bool isClosed = blinkSystem.IsBlinking;
 
-        if (shouldShake)
+        if (!isClosed && currentFatigue > shakeStart)
         {
-            float t = Mathf.InverseLerp(shakeStart, 1f, currentFatigue);
+            float intensity = Mathf.InverseLerp(shakeStart, 1f, currentFatigue);
             float time = Time.time * shakeFrequency;
-            float offsetX = (Mathf.PerlinNoise(time, 0f) - 0.5f) * 2f * maxShakePosition * t;
-            float offsetY = (Mathf.PerlinNoise(0f, time) - 0.5f) * 2f * maxShakePosition * t;
-            float rotZ = (Mathf.PerlinNoise(time, time) - 0.5f) * 2f * maxShakeAngle * t;
 
+            float offsetX = (Mathf.PerlinNoise(time, 0f) - 0.5f) * 2f * maxShakePosition * intensity;
+            float offsetY = (Mathf.PerlinNoise(0f, time) - 0.5f) * 2f * maxShakePosition * intensity;
             cameraTransform.localPosition = initialCameraLocalPosition + new Vector3(offsetX, offsetY, 0f);
+
+            float rotZ = (Mathf.PerlinNoise(time, time) - 0.5f) * 2f * maxShakeAngle * intensity;
             cameraTransform.localRotation = initialCameraLocalRotation * Quaternion.Euler(0f, 0f, rotZ);
         }
         else
         {
             cameraTransform.localPosition = Vector3.MoveTowards(
-                cameraTransform.localPosition, initialCameraLocalPosition, Time.deltaTime * cameraRecoveryPositionSpeed);
+                cameraTransform.localPosition,
+                initialCameraLocalPosition,
+                Time.deltaTime * cameraRecoveryPositionSpeed);
+
             cameraTransform.localRotation = Quaternion.RotateTowards(
-                cameraTransform.localRotation, initialCameraLocalRotation, Time.deltaTime * cameraRecoveryRotationSpeed);
+                cameraTransform.localRotation,
+                initialCameraLocalRotation,
+                Time.deltaTime * cameraRecoveryRotationSpeed);
         }
     }
 
@@ -348,7 +455,7 @@ public sealed class BlinkHudView : MonoBehaviour
         }
     }
 
-    private void UpdateFatigue(float fatigue)
+    public void UpdateFatigue(float fatigue)
     {
         fatigue = Mathf.Clamp01(fatigue);
         if (fatigueSlider != null)

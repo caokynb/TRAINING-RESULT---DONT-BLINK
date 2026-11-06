@@ -83,6 +83,22 @@ public class ExitDoorController : MonoBehaviour, IInteractable
             }
         }
 
+        if (found == null)
+        {
+            Transform searchRoot = transform.root;
+            if (searchRoot != null)
+            {
+                foreach (Transform t in searchRoot.GetComponentsInChildren<Transform>(true))
+                {
+                    if (t.name == "Plane.001")
+                    {
+                        found = t;
+                        break;
+                    }
+                }
+            }
+        }
+
         doorLeaf = found;
     }
 

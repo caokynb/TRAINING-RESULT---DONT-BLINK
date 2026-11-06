@@ -154,7 +154,7 @@ GameObject:
   - component: {fileID: 8844806113792310043}
   - component: {fileID: 923456789123456789}
   - component: {fileID: 6801234567890123}
-  - component: {fileID: 7134806113792310043}
+  - component: {fileID: 2875691431712385091}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -218,6 +218,7 @@ MonoBehaviour:
   settings: {fileID: 11400000, guid: d79e7e0ba86cfb24986507aa365115c3, type: 2}
   walkSpeed: 4
   gravity: -20
+  footstepInterval: 0.45
 --- !u!114 &5401367229094429891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -326,7 +327,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExitDetector
   exitTag: Exit
---- !u!114 &7134806113792310043
+--- !u!114 &2875691431712385091
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -342,7 +343,8 @@ MonoBehaviour:
   interactableLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  keyIconSprite: {fileID: 21300000, guid: e6dda1f54d0f0c744a97acd6b4bb403b, type: 3}
+  keyIconSprite: {fileID: 0}
+  customFont: {fileID: 0}
 --- !u!1 &6705970721198326511
 GameObject:
   m_ObjectHideFlags: 0
