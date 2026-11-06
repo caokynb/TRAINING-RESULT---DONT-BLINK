@@ -233,7 +233,7 @@ public class PlayerInteractor : MonoBehaviour
         }
     }
 
-    private void HandleEyesClosed()
+    private void HandleEyesClosed(float duration)
     {
         isEyesClosed = true;
         ClearTarget();
