@@ -29,6 +29,17 @@ Dự án **BACKROOMS: DON'T BLINK** sử dụng các tài nguyên 3D và âm tha
 
 ---
 
+### Key & KeyTag (Mô hình chìa khóa thoát hiểm)
+- **Nguồn:** Free 3D PBR Asset (Royalty-Free / CC0)
+- **Mục đích sử dụng:** Prefab chìa khóa thoát hiểm `Key.prefab` (Nhiệm vụ A18).
+
+---
+- **Nguồn:** Free 3D Asset
+- **Giấy phép:** Royalty-Free / Creative Commons
+- **Mục đích sử dụng:** Prefab khung cửa thoát `DoorFrame_Exit.prefab`.
+
+---
+
 ## 2. Âm thanh (Audio & SFX)
 *(Được tổng hợp và cập nhật theo nhiệm vụ T11, T12 & T17 - Nguồn: Freesound.org, Pixabay.com - Giấy phép: Creative Commons 0 / Royalty-Free)*
 
