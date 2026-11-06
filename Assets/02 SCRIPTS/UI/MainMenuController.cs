@@ -42,12 +42,14 @@ public sealed class MainMenuController : MonoBehaviour
 
     public void PlayGame()
     {
+        AudioManager.Instance?.PlayUIClick();
         Time.timeScale = 1f;
         SceneManager.LoadScene(gameSceneName, LoadSceneMode.Single);
     }
 
     public void QuitGame()
     {
+        AudioManager.Instance?.PlayUIClick();
         Time.timeScale = 1f;
         Application.Quit();
 #if UNITY_EDITOR

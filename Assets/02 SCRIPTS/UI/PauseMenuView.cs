@@ -138,6 +138,7 @@ public sealed class PauseMenuView : MonoBehaviour
             return;
 
         isPaused = false;
+        AudioManager.Instance?.PlayUIClick();
         Time.timeScale = 1f;
 
         if (pausePanel != null)
@@ -160,18 +161,21 @@ public sealed class PauseMenuView : MonoBehaviour
 
     public void RestartGame()
     {
+        AudioManager.Instance?.PlayUIClick();
         Time.timeScale = 1f;
         SceneManager.LoadScene(mainSceneName, LoadSceneMode.Single);
     }
 
     public void ReturnToMainMenu()
     {
+        AudioManager.Instance?.PlayUIClick();
         Time.timeScale = 1f;
         SceneManager.LoadScene(mainMenuSceneName, LoadSceneMode.Single);
     }
 
     public void QuitGame()
     {
+        AudioManager.Instance?.PlayUIClick();
         Time.timeScale = 1f;
         Application.Quit();
 #if UNITY_EDITOR
