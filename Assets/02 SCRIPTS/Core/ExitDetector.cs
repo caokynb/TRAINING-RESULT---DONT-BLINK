@@ -9,18 +9,31 @@ public sealed class ExitDetector : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (hasReachedExit || !other.CompareTag(exitTag))
+        TryTriggerExit(other);
+    }
+
+    private void OnTriggerStay(Collider other)
+    {
+        TryTriggerExit(other);
+    }
+
+    private void TryTriggerExit(Collider other)
+    {
+        if (hasReachedExit || other == null)
+            return;
+
+        if (!other.CompareTag(exitTag) && other.name != "Exit")
             return;
 
         // K25: Chỉ tính thắng khi cửa đã mở
         ExitDoorController doorCtrl = Object.FindFirstObjectByType<ExitDoorController>();
         if (doorCtrl != null && !doorCtrl.IsOpen)
         {
-            Debug.Log("[ExitDetector] Chưa thể thoát: Cửa chưa được mở!");
             return;
         }
 
         hasReachedExit = true;
+        Debug.Log("[ExitDetector] Người chơi đã thoát thành công qua cửa Exit!");
         GameEvents.RaiseReachedExit();
     }
 }

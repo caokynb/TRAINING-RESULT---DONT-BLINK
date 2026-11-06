@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -9,12 +10,22 @@ public class PlayerInteractor : MonoBehaviour
     [Header("Raycast Settings")]
     [Tooltip("Khoảng cách tương tác tối đa (K23 yêu cầu khoảng 3m)")]
     [SerializeField] private float interactDistance = 3.0f;
+    [Tooltip("Bán kính tia ngắm để nhặt dễ dàng (m)")]
+    [SerializeField] private float sphereCastRadius = 0.2f;
     [Tooltip("Layer mask cho các vật thể tương tác")]
     [SerializeField] private LayerMask interactableLayers = ~0;
 
     [Header("UI & Visuals (K24)")]
     [SerializeField] private Sprite keyIconSprite;
     [SerializeField] private Font customFont;
+
+    [Header("UI Hierarchy References (Tùy chỉnh trong Editor)")]
+    [SerializeField] private Canvas interactorCanvas;
+    [SerializeField] private Image crosshairDot;
+    [SerializeField] private GameObject promptRoot;
+    [SerializeField] private Image promptKeyIcon;
+    [SerializeField] private Text promptText;
+    [SerializeField] private GameObject hudKeyBadge;
 
     private Camera playerCamera;
     private PlayerInputReader inputReader;
@@ -23,14 +34,6 @@ public class PlayerInteractor : MonoBehaviour
     private IInteractable currentTarget;
     private GameObject currentTargetObject;
     private bool isEyesClosed;
-
-    // UI Elements
-    private Canvas interactorCanvas;
-    private GameObject promptRoot;
-    private Image promptKeyIcon;
-    private Text promptText;
-    private Image crosshairDot;
-    private GameObject hudKeyBadge;
 
     // Highlight tracking
     private readonly List<Renderer> highlightedRenderers = new List<Renderer>();
@@ -44,7 +47,15 @@ public class PlayerInteractor : MonoBehaviour
 
         ResolveCamera();
         ResolveKeyIcon();
-        BuildUI();
+
+        try
+        {
+            BuildUI();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[PlayerInteractor] BuildUI warning: {ex.Message}");
+        }
     }
 
     private void OnEnable()
@@ -84,9 +95,9 @@ public class PlayerInteractor : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (interactorCanvas != null)
+        if (interactorCanvas != null && Application.isPlaying)
         {
-            Destroy(interactorCanvas.gameObject);
+            // Không xóa nếu là đối tượng persistent trong Hierarchy
         }
     }
 
@@ -134,48 +145,176 @@ public class PlayerInteractor : MonoBehaviour
         }
     }
 
+    public bool ResolveExistingReferences()
+    {
+        if (interactorCanvas == null)
+        {
+            Transform found = transform.Find("Player_Interaction_Canvas");
+            if (found != null)
+                interactorCanvas = found.GetComponent<Canvas>();
+        }
+
+        if (interactorCanvas == null)
+            return false;
+
+        if (crosshairDot == null)
+        {
+            Transform t = interactorCanvas.transform.Find("CrosshairDot");
+            if (t != null) crosshairDot = t.GetComponent<Image>();
+        }
+
+        if (promptRoot == null)
+        {
+            Transform t = interactorCanvas.transform.Find("PromptPanel");
+            if (t != null)
+            {
+                promptRoot = t.gameObject;
+                Transform iconT = t.Find("PromptKeyIcon");
+                if (iconT != null) promptKeyIcon = iconT.GetComponent<Image>();
+                Transform textT = t.Find("PromptText");
+                if (textT != null) promptText = textT.GetComponent<Text>();
+            }
+        }
+
+        if (hudKeyBadge == null)
+        {
+            Transform t = interactorCanvas.transform.Find("HUD_KeyBadge");
+            if (t != null) hudKeyBadge = t.gameObject;
+        }
+
+        return crosshairDot != null && promptRoot != null;
+    }
+
+    [ContextMenu("Tạo / Hiển thị HUD trong Scene (Edit Mode)")]
+    public void SetupUIInEditor()
+    {
+        ResolveKeyIcon();
+
+        if (ResolveExistingReferences())
+        {
+            // Hiển thị preview các thành phần để căn chỉnh
+            if (crosshairDot != null) crosshairDot.gameObject.SetActive(true);
+            if (promptRoot != null)
+            {
+                promptRoot.SetActive(true);
+                if (promptText != null) promptText.text = "Chuột trái / E: Nhặt chìa khóa";
+                if (promptKeyIcon != null && keyIconSprite != null)
+                {
+                    promptKeyIcon.sprite = keyIconSprite;
+                    promptKeyIcon.gameObject.SetActive(true);
+                }
+            }
+            if (hudKeyBadge != null)
+            {
+                hudKeyBadge.SetActive(true);
+            }
+            return;
+        }
+
+        BuildUI();
+
+        if (promptRoot != null)
+        {
+            promptRoot.SetActive(true);
+            if (promptText != null) promptText.text = "Chuột trái / E: Nhặt chìa khóa";
+            if (promptKeyIcon != null && keyIconSprite != null)
+            {
+                promptKeyIcon.sprite = keyIconSprite;
+                promptKeyIcon.gameObject.SetActive(true);
+            }
+        }
+
+        if (hudKeyBadge != null)
+        {
+            hudKeyBadge.SetActive(true);
+        }
+
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(gameObject);
+        if (interactorCanvas != null)
+            UnityEditor.EditorUtility.SetDirty(interactorCanvas.gameObject);
+#endif
+    }
+
+    [ContextMenu("Ẩn Preview HUD (Sẵn sàng Play)")]
+    public void HidePreviewInEditor()
+    {
+        if (promptRoot != null) promptRoot.SetActive(false);
+        if (hudKeyBadge != null) hudKeyBadge.SetActive(false);
+    }
+
     private void PerformInteractionRaycast()
     {
         if (playerCamera == null)
             return;
 
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
-        bool hitSomething = Physics.Raycast(ray, out RaycastHit hit, interactDistance, interactableLayers, QueryTriggerInteraction.Collide);
 
-        if (hitSomething && hit.collider != null)
+        // Bắn tia dạng SphereCast với bán kính nhỏ để người chơi không phải ngắm tuyệt đối chính xác từng pixel
+        RaycastHit[] hits = Physics.SphereCastAll(ray, sphereCastRadius, interactDistance, interactableLayers, QueryTriggerInteraction.Collide);
+
+        if (hits == null || hits.Length == 0)
         {
-            // Kiểm tra IInteractable trên collider hoặc cha
-            IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
-            GameObject hitObj = null;
+            hits = Physics.RaycastAll(ray, interactDistance, interactableLayers, QueryTriggerInteraction.Collide);
+        }
 
-            if (interactable != null)
+        if (hits != null && hits.Length > 0)
+        {
+            Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+            for (int i = 0; i < hits.Length; i++)
             {
-                hitObj = (interactable as MonoBehaviour)?.gameObject;
-            }
-            else
-            {
-                // Fallback kiểm tra trực tiếp KeyPickup hoặc ExitDoorController
-                KeyPickup kp = hit.collider.GetComponentInParent<KeyPickup>();
-                if (kp != null)
+                RaycastHit hit = hits[i];
+                if (hit.collider == null)
+                    continue;
+
+                // QUAN TRỌNG: Bỏ qua chính collider của Player (CharacterController / Camera)
+                if (hit.transform == transform || hit.transform.IsChildOf(transform))
+                    continue;
+
+                IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
+                GameObject hitObj = null;
+
+                if (interactable != null)
                 {
-                    interactable = kp;
-                    hitObj = kp.gameObject;
+                    hitObj = (interactable as MonoBehaviour)?.gameObject;
                 }
                 else
                 {
-                    ExitDoorController door = hit.collider.GetComponentInParent<ExitDoorController>();
-                    if (door != null)
+                    // Fallback 1: KeyPickup
+                    KeyPickup kp = hit.collider.GetComponentInParent<KeyPickup>();
+                    if (kp != null)
                     {
-                        interactable = door;
-                        hitObj = door.gameObject;
+                        interactable = kp;
+                        hitObj = kp.gameObject;
+                    }
+                    else
+                    {
+                        // Fallback 2: ExitDoorController
+                        ExitDoorController door = hit.collider.GetComponentInParent<ExitDoorController>();
+                        if (door == null && (hit.collider.name.Contains("Door") || hit.collider.CompareTag("Exit") || hit.collider.CompareTag("ExitDoor")))
+                        {
+                            door = FindFirstObjectByType<ExitDoorController>();
+                        }
+
+                        if (door != null)
+                        {
+                            interactable = door;
+                            hitObj = door.gameObject;
+                        }
                     }
                 }
-            }
 
-            if (interactable != null && interactable.CanInteract())
-            {
-                SetTarget(interactable, hitObj);
-                return;
+                if (interactable != null && interactable.CanInteract())
+                {
+                    SetTarget(interactable, hitObj);
+                    return;
+                }
+
+                if (!hit.collider.isTrigger && hit.distance > 0.05f)
+                {
+                    break;
+                }
             }
         }
 
@@ -218,10 +357,9 @@ public class PlayerInteractor : MonoBehaviour
 
         if (currentTarget != null && currentTarget.CanInteract())
         {
-            Debug.Log($"[PlayerInteractor] Tương tác với: {currentTargetObject?.name}");
+            Debug.Log($"[PlayerInteractor] Thực hiện tương tác với: {currentTargetObject?.name}");
             currentTarget.Interact();
 
-            // Cập nhật lại UI sau tương tác
             if (currentTarget == null || !currentTarget.CanInteract())
             {
                 ClearTarget();
@@ -300,14 +438,12 @@ public class PlayerInteractor : MonoBehaviour
 
         promptText.text = prompt;
 
-        // Nếu là chìa khóa, hiện icon chìa khóa cạnh prompt
         bool isKey = (interactable is KeyPickup) || (currentTargetObject != null && currentTargetObject.name.Contains("Key"));
         if (promptKeyIcon != null)
         {
             promptKeyIcon.gameObject.SetActive(isKey && keyIconSprite != null);
         }
 
-        // Đổi màu prompt (đỏ nếu cửa bị khóa, trắng/xanh nếu có thể tương tác)
         if (prompt.Contains("khóa"))
         {
             promptText.color = new Color(1f, 0.35f, 0.35f, 1f);
@@ -328,9 +464,41 @@ public class PlayerInteractor : MonoBehaviour
         }
     }
 
+    private static Font GetDefaultFont()
+    {
+        Font font = null;
+        try
+        {
+            font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        }
+        catch { }
+
+        if (font == null)
+        {
+            try
+            {
+                font = Font.CreateDynamicFontFromOSFont("Arial", 20);
+            }
+            catch { }
+        }
+
+        return font;
+    }
+
     private void BuildUI()
     {
+        if (ResolveExistingReferences())
+        {
+            if (Application.isPlaying)
+            {
+                if (promptRoot != null) promptRoot.SetActive(false);
+                if (hudKeyBadge != null) hudKeyBadge.SetActive(false);
+            }
+            return;
+        }
+
         GameObject canvasObj = new GameObject("Player_Interaction_Canvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+        canvasObj.transform.SetParent(transform, false);
         interactorCanvas = canvasObj.GetComponent<Canvas>();
         interactorCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
         interactorCanvas.sortingOrder = 50;
@@ -339,6 +507,8 @@ public class PlayerInteractor : MonoBehaviour
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         scaler.referenceResolution = new Vector2(1920f, 1080f);
         scaler.matchWidthOrHeight = 0.5f;
+
+        Font resolvedFont = customFont != null ? customFont : GetDefaultFont();
 
         // 1. Crosshair Dot ở giữa màn hình
         GameObject dotObj = new GameObject("CrosshairDot", typeof(RectTransform), typeof(Image));
@@ -384,7 +554,8 @@ public class PlayerInteractor : MonoBehaviour
         GameObject textObj = new GameObject("PromptText", typeof(RectTransform), typeof(Text), typeof(Outline));
         textObj.transform.SetParent(promptRoot.transform, false);
         promptText = textObj.GetComponent<Text>();
-        promptText.font = customFont != null ? customFont : Resources.GetBuiltinResource<Font>("Arial.ttf");
+        if (resolvedFont != null)
+            promptText.font = resolvedFont;
         promptText.fontSize = 24;
         promptText.fontStyle = FontStyle.Bold;
         promptText.alignment = TextAnchor.MiddleCenter;
@@ -427,7 +598,8 @@ public class PlayerInteractor : MonoBehaviour
         GameObject badgeTextObj = new GameObject("BadgeLabel", typeof(RectTransform), typeof(Text), typeof(Outline));
         badgeTextObj.transform.SetParent(hudKeyBadge.transform, false);
         Text badgeLabel = badgeTextObj.GetComponent<Text>();
-        badgeLabel.font = promptText.font;
+        if (resolvedFont != null)
+            badgeLabel.font = resolvedFont;
         badgeLabel.fontSize = 18;
         badgeLabel.fontStyle = FontStyle.Bold;
         badgeLabel.text = "CHÌA KHÓA";

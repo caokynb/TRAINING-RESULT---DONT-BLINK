@@ -11,10 +11,12 @@ public sealed class TutorialScreenView : MonoBehaviour
     [SerializeField] private Vector2 confirmButtonSize = new Vector2(300f, 76f);
     [SerializeField, Min(1)] private int buttonFontSize = 40;
 
+    [Header("UI Hierarchy References (Tùy chỉnh trong Editor)")]
+    [SerializeField] private Canvas tutorialCanvas;
+
     private PlayerInputReader inputReader;
     private PlayerMovement playerMovement;
     private PlayerLook playerLook;
-    private Canvas tutorialCanvas;
     private EventSystem ownedEventSystem;
     private Sprite runtimeInstructionSprite;
     private float previousTimeScale;
@@ -56,6 +58,43 @@ public sealed class TutorialScreenView : MonoBehaviour
             Destroy(runtimeInstructionSprite);
     }
 
+    public bool ResolveExistingReferences()
+    {
+        if (tutorialCanvas == null)
+        {
+            Transform found = transform.Find("Tutorial Screen");
+            if (found != null)
+                tutorialCanvas = found.GetComponent<Canvas>();
+        }
+
+        return tutorialCanvas != null;
+    }
+
+    [ContextMenu("Tạo / Hiển thị Tutorial trong Scene (Edit Mode)")]
+    public void SetupTutorialInEditor()
+    {
+        if (ResolveExistingReferences())
+        {
+            tutorialCanvas.gameObject.SetActive(true);
+            return;
+        }
+
+        BuildTutorialCanvas();
+
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(gameObject);
+        if (tutorialCanvas != null)
+            UnityEditor.EditorUtility.SetDirty(tutorialCanvas.gameObject);
+#endif
+    }
+
+    [ContextMenu("Ẩn Tutorial Preview")]
+    public void HideTutorialInEditor()
+    {
+        if (tutorialCanvas != null)
+            tutorialCanvas.gameObject.SetActive(false);
+    }
+
     private void EnsureEventSystem()
     {
         if (EventSystem.current != null)
@@ -68,12 +107,16 @@ public sealed class TutorialScreenView : MonoBehaviour
 
     private void BuildTutorialCanvas()
     {
+        if (ResolveExistingReferences())
+            return;
+
         GameObject canvasObject = new GameObject(
             "Tutorial Screen",
             typeof(RectTransform),
             typeof(Canvas),
             typeof(CanvasScaler),
             typeof(GraphicRaycaster));
+        canvasObject.transform.SetParent(transform, false);
 
         tutorialCanvas = canvasObject.GetComponent<Canvas>();
         tutorialCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -89,11 +132,14 @@ public sealed class TutorialScreenView : MonoBehaviour
         background.color = new Color(0f, 0f, 0f, 0.92f);
 
         Image instruction = CreateImage("Instruction Image", canvasObject.transform);
-        runtimeInstructionSprite = Sprite.Create(
-            instructionImage,
-            new Rect(0f, 0f, instructionImage.width, instructionImage.height),
-            new Vector2(0.5f, 0.5f));
-        instruction.sprite = runtimeInstructionSprite;
+        if (instructionImage != null)
+        {
+            runtimeInstructionSprite = Sprite.Create(
+                instructionImage,
+                new Rect(0f, 0f, instructionImage.width, instructionImage.height),
+                new Vector2(0.5f, 0.5f));
+            instruction.sprite = runtimeInstructionSprite;
+        }
         instruction.preserveAspect = true;
         instruction.raycastTarget = false;
 
@@ -119,9 +165,9 @@ public sealed class TutorialScreenView : MonoBehaviour
         RectTransform buttonRect = buttonObject.GetComponent<RectTransform>();
         buttonRect.anchorMin = new Vector2(0.5f, 0f);
         buttonRect.anchorMax = new Vector2(0.5f, 0f);
-        buttonRect.pivot = new Vector2(0.5f, 0f);
+        buttonRect.pivot = new Vector2(0.5f, 0.5f);
         buttonRect.sizeDelta = confirmButtonSize;
-        buttonRect.anchoredPosition = new Vector2(0f, 36f);
+        buttonRect.anchoredPosition = new Vector2(0f, 80f);
 
         Image buttonImage = buttonObject.GetComponent<Image>();
         buttonImage.color = new Color(0.88f, 0.82f, 0.55f, 1f);
@@ -135,7 +181,14 @@ public sealed class TutorialScreenView : MonoBehaviour
 
         Text label = labelObject.GetComponent<Text>();
         label.text = "Xác nhận";
-        label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        try
+        {
+            label.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        }
+        catch
+        {
+            label.font = Font.CreateDynamicFontFromOSFont("Arial", buttonFontSize);
+        }
         label.fontSize = buttonFontSize;
         label.fontStyle = FontStyle.Bold;
         label.alignment = TextAnchor.MiddleCenter;
@@ -146,13 +199,19 @@ public sealed class TutorialScreenView : MonoBehaviour
 
     private void ShowTutorial()
     {
-        previousTimeScale = 1f;
+        if (tutorialCanvas == null)
+            return;
+
+        tutorialCanvas.gameObject.SetActive(true);
         isShowingTutorial = true;
+        previousTimeScale = Time.timeScale;
         Time.timeScale = 0f;
 
         playerMovement.SetMovementLocked(true);
         playerLook.enabled = false;
         inputReader.enabled = false;
+
+        Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
 
@@ -182,8 +241,10 @@ public sealed class TutorialScreenView : MonoBehaviour
     {
         if (tutorialCanvas != null)
         {
-            Destroy(tutorialCanvas.gameObject);
-            tutorialCanvas = null;
+            if (Application.isPlaying)
+            {
+                tutorialCanvas.gameObject.SetActive(false);
+            }
         }
     }
 
