@@ -77,6 +77,24 @@ public class MonsterBrain : MonoBehaviour
     public float CurrentDifficulty => settings != null ? settings.EvaluateDifficulty(TimeSinceGracePeriod) : 0f;
     public int CurrentBonusSteps => settings != null ? settings.GetBonusSteps(TimeSinceGracePeriod) : 0;
 
+    private void SetupMonsterAudio()
+    {
+        if (monsterAudioSource == null)
+            monsterAudioSource = GetComponent<AudioSource>();
+        if (monsterAudioSource == null)
+            monsterAudioSource = gameObject.AddComponent<AudioSource>();
+
+        monsterAudioSource.playOnAwake = false;
+        monsterAudioSource.spatialBlend = 1f; // 3D spatial
+        monsterAudioSource.rolloffMode = AudioRolloffMode.Logarithmic;
+        monsterAudioSource.minDistance = minFootstepDistance;
+        monsterAudioSource.maxDistance = maxFootstepDistance;
+        monsterAudioSource.dopplerLevel = 0f;
+
+        if (footstepsClip == null && AudioManager.Instance != null)
+            footstepsClip = AudioManager.Instance.MonsterFootstepsClip;
+    }
+
     private void Awake()
     {
         SetupMonsterAudio();
