@@ -41,17 +41,20 @@ public class PortalMenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExi
             originalTextPos = buttonText.rectTransform.anchoredPosition;
             targetTextPos = originalTextPos;
             buttonText.color = normalTextColor;
+
+            // QUAN TRỌNG: Tắt Raycast Target trên Text con để không nuốt tia chuột của Button
+            buttonText.raycastTarget = false;
         }
 
         if (highlightBar != null)
         {
             highlightBar.gameObject.SetActive(false);
+            highlightBar.raycastTarget = false;
         }
     }
 
     private void OnEnable()
     {
-        // Reset về trạng thái bình thường khi menu hiển thị
         isHovered = false;
         if (highlightBar != null)
             highlightBar.gameObject.SetActive(false);
@@ -61,6 +64,7 @@ public class PortalMenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExi
             buttonText.color = normalTextColor;
             buttonText.rectTransform.anchoredPosition = originalTextPos;
             targetTextPos = originalTextPos;
+            buttonText.raycastTarget = false;
         }
     }
 
@@ -106,6 +110,18 @@ public class PortalMenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExi
 
     public void OnPointerClick(PointerEventData eventData)
     {
+        // 1. Nếu script này nằm trên object con (Text) thay vì Button cha, chuyển tiếp click lên Button cha
+        Button parentButton = GetComponentInParent<Button>();
+        if (parentButton != null && parentButton.gameObject != gameObject)
+        {
+            if (parentButton.interactable)
+            {
+                parentButton.onClick.Invoke();
+            }
+            return;
+        }
+
+        // 2. Nếu script này nằm trên chính Button thì Button đã tự gọi onClick
         AudioManager.Instance?.PlayUIClick();
     }
 }

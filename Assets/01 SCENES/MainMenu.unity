@@ -1678,7 +1678,6 @@ GameObject:
   - component: {fileID: 396467457}
   - component: {fileID: 396467459}
   - component: {fileID: 396467458}
-  - component: {fileID: 396467460}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -1805,24 +1804,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 396467456}
   m_CullTransparentMesh: 1
---- !u!114 &396467460
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 396467456}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd213075f399cfc46b4d52a8b124ff3d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PortalMenuButton
-  highlightBar: {fileID: 0}
-  buttonText: {fileID: 0}
-  normalTextColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
-  hoverTextColor: {r: 1, g: 1, b: 1, a: 1}
-  slideOffset: 12
-  transitionSpeed: 14
 --- !u!4 &397348725 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2891997102670998839, guid: cb829b0c453ee1c4dadfacd54ef2062c, type: 3}
@@ -1979,6 +1960,7 @@ GameObject:
   - component: {fileID: 473798115}
   - component: {fileID: 473798114}
   - component: {fileID: 473798113}
+  - component: {fileID: 473798116}
   m_Layer: 5
   m_Name: PlayButton
   m_TagString: Untagged
@@ -2088,6 +2070,24 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 473798111}
   m_CullTransparentMesh: 1
+--- !u!114 &473798116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 473798111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd213075f399cfc46b4d52a8b124ff3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PortalMenuButton
+  highlightBar: {fileID: 0}
+  buttonText: {fileID: 0}
+  normalTextColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  hoverTextColor: {r: 1, g: 1, b: 1, a: 1}
+  slideOffset: 12
+  transitionSpeed: 14
 --- !u!1001 &474779500
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2763,6 +2763,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 20020835}
     m_Modifications:
+    - target: {fileID: -1507952549922131599, guid: cb829b0c453ee1c4dadfacd54ef2062c, type: 3}
+      propertyPath: preset
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: -1507952549922131599, guid: cb829b0c453ee1c4dadfacd54ef2062c, type: 3}
+      propertyPath: maxInterval
+      value: 4.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -1507952549922131599, guid: cb829b0c453ee1c4dadfacd54ef2062c, type: 3}
+      propertyPath: minInterval
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -1507952549922131599, guid: cb829b0c453ee1c4dadfacd54ef2062c, type: 3}
+      propertyPath: flickerSpeed
+      value: 0.07
+      objectReference: {fileID: 0}
+    - target: {fileID: -1507952549922131599, guid: cb829b0c453ee1c4dadfacd54ef2062c, type: 3}
+      propertyPath: intensityFactor
+      value: 0.5
+      objectReference: {fileID: 0}
+    - target: {fileID: -1507952549922131599, guid: cb829b0c453ee1c4dadfacd54ef2062c, type: 3}
+      propertyPath: minIntensityRatio
+      value: 0.1
+      objectReference: {fileID: 0}
     - target: {fileID: 1521561232354678728, guid: cb829b0c453ee1c4dadfacd54ef2062c, type: 3}
       propertyPath: m_Name
       value: CeilingLight_4_4
@@ -3304,7 +3328,6 @@ GameObject:
   - component: {fileID: 760894668}
   - component: {fileID: 760894670}
   - component: {fileID: 760894669}
-  - component: {fileID: 760894671}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -3431,24 +3454,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 760894667}
   m_CullTransparentMesh: 1
---- !u!114 &760894671
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 760894667}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd213075f399cfc46b4d52a8b124ff3d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PortalMenuButton
-  highlightBar: {fileID: 0}
-  buttonText: {fileID: 0}
-  normalTextColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
-  hoverTextColor: {r: 1, g: 1, b: 1, a: 1}
-  slideOffset: 12
-  transitionSpeed: 14
 --- !u!4 &775780339 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8208233180951938995, guid: cf9670a7b4ab7da438097f321f32d657, type: 3}
@@ -4728,6 +4733,7 @@ GameObject:
   - component: {fileID: 1075657656}
   - component: {fileID: 1075657655}
   - component: {fileID: 1075657654}
+  - component: {fileID: 1075657657}
   m_Layer: 5
   m_Name: QuitButton
   m_TagString: Untagged
@@ -4837,6 +4843,24 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1075657652}
   m_CullTransparentMesh: 1
+--- !u!114 &1075657657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1075657652}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd213075f399cfc46b4d52a8b124ff3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PortalMenuButton
+  highlightBar: {fileID: 0}
+  buttonText: {fileID: 0}
+  normalTextColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  hoverTextColor: {r: 1, g: 1, b: 1, a: 1}
+  slideOffset: 12
+  transitionSpeed: 14
 --- !u!1001 &1089737515
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6721,6 +6745,7 @@ GameObject:
   - component: {fileID: 1716356654}
   - component: {fileID: 1716356653}
   - component: {fileID: 1716356652}
+  - component: {fileID: 1716356655}
   m_Layer: 5
   m_Name: Credit
   m_TagString: Untagged
@@ -6830,6 +6855,24 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1716356650}
   m_CullTransparentMesh: 1
+--- !u!114 &1716356655
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1716356650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd213075f399cfc46b4d52a8b124ff3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PortalMenuButton
+  highlightBar: {fileID: 0}
+  buttonText: {fileID: 0}
+  normalTextColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
+  hoverTextColor: {r: 1, g: 1, b: 1, a: 1}
+  slideOffset: 12
+  transitionSpeed: 14
 --- !u!4 &1729677650 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3299009822054099894, guid: b4bbc82377e135a4780b0b72240732d2, type: 3}
@@ -7216,7 +7259,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: -30, y: -40}
+  m_AnchoredPosition: {x: -5, y: -40}
   m_SizeDelta: {x: 1920, y: 600}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &1813444388
@@ -7715,7 +7758,6 @@ GameObject:
   - component: {fileID: 1947574740}
   - component: {fileID: 1947574742}
   - component: {fileID: 1947574741}
-  - component: {fileID: 1947574743}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -7842,24 +7884,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1947574739}
   m_CullTransparentMesh: 1
---- !u!114 &1947574743
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1947574739}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd213075f399cfc46b4d52a8b124ff3d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PortalMenuButton
-  highlightBar: {fileID: 0}
-  buttonText: {fileID: 0}
-  normalTextColor: {r: 0.7, g: 0.7, b: 0.7, a: 1}
-  hoverTextColor: {r: 1, g: 1, b: 1, a: 1}
-  slideOffset: 12
-  transitionSpeed: 14
 --- !u!1001 &1953350323
 PrefabInstance:
   m_ObjectHideFlags: 0
