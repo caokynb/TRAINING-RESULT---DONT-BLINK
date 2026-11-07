@@ -15,7 +15,7 @@ MonoBehaviour:
   walkSpeed: 4
   gravity: -20
   mouseSensitivity: 0.08
-  fatigueTime: 30
-  manualFatigueRecoveryRate: 5
-  manualBlinkCooldown: 5
-  forcedBlinkDuration: 5
+  fatigueTime: 12
+  manualFatigueRecoveryRate: 1
+  manualBlinkCooldown: 1.5
+  forcedBlinkDuration: 1
