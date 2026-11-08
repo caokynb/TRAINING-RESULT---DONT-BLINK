@@ -27,23 +27,34 @@ public class PortalMenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExi
     [Tooltip("Tốc độ chuyển động mượt của chữ.")]
     [SerializeField] private float transitionSpeed = 14f;
 
+    private Text legacyButtonText;
     private Vector2 originalTextPos;
     private Vector2 targetTextPos;
     private bool isHovered = false;
+
+    private RectTransform ActiveTextTransform => buttonText != null ? buttonText.rectTransform : (legacyButtonText != null ? legacyButtonText.rectTransform : null);
 
     private void Awake()
     {
         if (buttonText == null)
             buttonText = GetComponentInChildren<TextMeshProUGUI>();
 
+        if (buttonText == null)
+            legacyButtonText = GetComponentInChildren<Text>();
+
         if (buttonText != null)
         {
             originalTextPos = buttonText.rectTransform.anchoredPosition;
             targetTextPos = originalTextPos;
             buttonText.color = normalTextColor;
-
-            // QUAN TRỌNG: Tắt Raycast Target trên Text con để không nuốt tia chuột của Button
             buttonText.raycastTarget = false;
+        }
+        else if (legacyButtonText != null)
+        {
+            originalTextPos = legacyButtonText.rectTransform.anchoredPosition;
+            targetTextPos = originalTextPos;
+            legacyButtonText.color = normalTextColor;
+            legacyButtonText.raycastTarget = false;
         }
 
         if (highlightBar != null)
@@ -66,14 +77,22 @@ public class PortalMenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExi
             targetTextPos = originalTextPos;
             buttonText.raycastTarget = false;
         }
+        else if (legacyButtonText != null)
+        {
+            legacyButtonText.color = normalTextColor;
+            legacyButtonText.rectTransform.anchoredPosition = originalTextPos;
+            targetTextPos = originalTextPos;
+            legacyButtonText.raycastTarget = false;
+        }
     }
 
     private void Update()
     {
-        if (buttonText != null)
+        RectTransform rt = ActiveTextTransform;
+        if (rt != null)
         {
-            buttonText.rectTransform.anchoredPosition = Vector2.Lerp(
-                buttonText.rectTransform.anchoredPosition,
+            rt.anchoredPosition = Vector2.Lerp(
+                rt.anchoredPosition,
                 targetTextPos,
                 Time.unscaledDeltaTime * transitionSpeed
             );
@@ -91,6 +110,11 @@ public class PortalMenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExi
             buttonText.color = hoverTextColor;
             targetTextPos = originalTextPos + new Vector2(slideOffset, 0f);
         }
+        else if (legacyButtonText != null)
+        {
+            legacyButtonText.color = hoverTextColor;
+            targetTextPos = originalTextPos + new Vector2(slideOffset, 0f);
+        }
 
         AudioManager.Instance?.PlayUIClick();
     }
@@ -104,6 +128,11 @@ public class PortalMenuButton : MonoBehaviour, IPointerEnterHandler, IPointerExi
         if (buttonText != null)
         {
             buttonText.color = normalTextColor;
+            targetTextPos = originalTextPos;
+        }
+        else if (legacyButtonText != null)
+        {
+            legacyButtonText.color = normalTextColor;
             targetTextPos = originalTextPos;
         }
     }
