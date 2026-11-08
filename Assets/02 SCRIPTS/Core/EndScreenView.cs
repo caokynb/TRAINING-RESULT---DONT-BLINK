@@ -163,7 +163,7 @@ public sealed class EndScreenView : MonoBehaviour
         if (state == GameManager.GameState.Won)
         {
             if (resultText != null)
-                resultText.text = "Thoát được rồi!";
+                resultText.text = "ESCAPED";
 
             SetInputSectionActive(true);
 
@@ -186,7 +186,7 @@ public sealed class EndScreenView : MonoBehaviour
         else // Lost
         {
             if (resultText != null)
-                resultText.text = "Mày chậm quá!";
+                resultText.text = "CATCHED";
 
             SetInputSectionActive(false);
 
@@ -236,7 +236,7 @@ public sealed class EndScreenView : MonoBehaviour
             if (statusMessageText != null)
             {
                 statusMessageText.color = errorStatusColor;
-                statusMessageText.text = "Vui lòng nhập Mã sinh viên!";
+                statusMessageText.text = "Enter your student ID...";
             }
             return;
         }
@@ -244,7 +244,7 @@ public sealed class EndScreenView : MonoBehaviour
         if (statusMessageText != null)
         {
             statusMessageText.color = Color.white;
-            statusMessageText.text = "Đang kiểm tra kết quả...";
+            statusMessageText.text = "Checking...";
         }
 
         if (confirmButton != null)
@@ -267,7 +267,7 @@ public sealed class EndScreenView : MonoBehaviour
                 if (statusMessageText != null)
                 {
                     statusMessageText.color = errorStatusColor;
-                    statusMessageText.text = $"Lỗi kết nối ({www.error}). Vui lòng thử lại!";
+                    statusMessageText.text = $"Internet Error ({www.error}). Please try again!";
                 }
 
                 if (confirmButton != null)
@@ -303,7 +303,7 @@ public sealed class EndScreenView : MonoBehaviour
                     statusMessageText.color = errorStatusColor;
                     statusMessageText.text = data != null && !string.IsNullOrEmpty(data.message)
                         ? data.message
-                        : "Không tìm thấy Mã sinh viên trong danh sách!";
+                        : "Cannot find your Student ID in List";
                 }
             }
 
