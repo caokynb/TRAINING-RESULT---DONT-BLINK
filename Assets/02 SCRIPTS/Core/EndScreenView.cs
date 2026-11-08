@@ -81,9 +81,6 @@ public sealed class EndScreenView : MonoBehaviour
         if (studentResultPanel != null)
             studentResultPanel.SetActive(false);
 
-        if (mainMenuButton != null)
-            mainMenuButton.gameObject.SetActive(false);
-
         if (gameManager == null)
             Debug.LogError("EndScreenView: GameManager was not found in the loaded scenes.", this);
 
@@ -170,6 +167,9 @@ public sealed class EndScreenView : MonoBehaviour
 
             SetInputSectionActive(true);
 
+            if (retryButton != null)
+                retryButton.gameObject.SetActive(true);
+
             if (mainMenuButton != null)
                 mainMenuButton.gameObject.SetActive(true);
 
@@ -190,8 +190,11 @@ public sealed class EndScreenView : MonoBehaviour
 
             SetInputSectionActive(false);
 
+            if (retryButton != null)
+                retryButton.gameObject.SetActive(true);
+
             if (mainMenuButton != null)
-                mainMenuButton.gameObject.SetActive(false);
+                mainMenuButton.gameObject.SetActive(true);
         }
     }
 

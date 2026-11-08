@@ -74,6 +74,7 @@ public sealed class BlinkHudView : MonoBehaviour
     private Transform cameraTransform;
     private Vector3 initialCameraLocalPosition;
     private Quaternion initialCameraLocalRotation;
+    private bool isPlayerCaught;
 
     private void Awake()
     {
@@ -96,6 +97,8 @@ public sealed class BlinkHudView : MonoBehaviour
 
     private void OnEnable()
     {
+        GameEvents.OnPlayerCaught += HandlePlayerCaught;
+
         if (blinkSystem != null)
         {
             blinkSystem.FatigueChanged += UpdateFatigue;
@@ -107,12 +110,19 @@ public sealed class BlinkHudView : MonoBehaviour
 
     private void OnDisable()
     {
+        GameEvents.OnPlayerCaught -= HandlePlayerCaught;
+
         if (blinkSystem != null)
         {
             blinkSystem.FatigueChanged -= UpdateFatigue;
             blinkSystem.EyesClosedChanged -= SetEyesClosed;
         }
         ResetCameraShake();
+    }
+
+    private void HandlePlayerCaught()
+    {
+        isPlayerCaught = true;
     }
 
     private void Update()
@@ -363,7 +373,7 @@ public sealed class BlinkHudView : MonoBehaviour
 
     private void UpdateCameraShake()
     {
-        if (cameraTransform == null || blinkSystem == null)
+        if (isPlayerCaught || cameraTransform == null || blinkSystem == null)
             return;
 
         float currentFatigue = blinkSystem.Fatigue;
@@ -397,6 +407,9 @@ public sealed class BlinkHudView : MonoBehaviour
 
     private void ResetCameraShake()
     {
+        if (isPlayerCaught)
+            return;
+
         if (cameraTransform != null)
         {
             cameraTransform.localPosition = initialCameraLocalPosition;

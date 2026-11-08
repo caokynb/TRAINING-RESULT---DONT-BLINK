@@ -151,12 +151,6 @@ public class CatchSequence : MonoBehaviour
         {
             isSequenceActive = false;
 
-            // Khôi phục lại FOV mặc định của camera
-            if (playerCamera != null)
-            {
-                playerCamera.fieldOfView = originalCameraFOV;
-            }
-
             // Bật lại panel kết thúc nếu có
             if (endPanel != null && !endPanel.activeSelf)
             {
@@ -171,15 +165,27 @@ public class CatchSequence : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (!isSequenceActive || playerCamera == null || !hasBaseCameraRot)
+        if (playerCamera == null || !hasBaseCameraRot)
             return;
 
-        // Giật nhẹ vi mô kiểu jumpscare Baldi's Basics trong lúc camera đang zoom sát mặt quái
-        if (glitchJitter > 0.001f)
+        if (isSequenceActive)
         {
-            float jitterX = Random.Range(-glitchJitter, glitchJitter);
-            float jitterY = Random.Range(-glitchJitter, glitchJitter);
-            playerCamera.transform.rotation = baseCameraRot * Quaternion.Euler(jitterX, jitterY, 0f);
+            // Giật nhẹ vi mô kiểu jumpscare Baldi's Basics trong lúc camera đang zoom sát mặt quái
+            if (glitchJitter > 0.001f)
+            {
+                float jitterX = Random.Range(-glitchJitter, glitchJitter);
+                float jitterY = Random.Range(-glitchJitter, glitchJitter);
+                playerCamera.transform.rotation = baseCameraRot * Quaternion.Euler(jitterX, jitterY, 0f);
+            }
+            else
+            {
+                playerCamera.transform.rotation = baseCameraRot;
+            }
+        }
+        else if (hasTriggered)
+        {
+            // Jumpscare xong: Giữ camera nhìn thẳng vào mặt quái, không bị pan xuống
+            playerCamera.transform.rotation = baseCameraRot;
         }
     }
 
@@ -272,6 +278,12 @@ public class CatchSequence : MonoBehaviour
     {
         if (camTransform == null || playerCamera == null)
             yield break;
+
+        Transform cameraPivot = playerCamera.transform.parent;
+        if (cameraPivot != null && cameraPivot.name.IndexOf("Pivot", System.StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            cameraPivot.localRotation = Quaternion.identity;
+        }
 
         originalCameraFOV = playerCamera.fieldOfView;
         Quaternion startCamRot = camTransform.rotation;
