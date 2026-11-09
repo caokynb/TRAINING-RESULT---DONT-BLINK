@@ -1216,6 +1216,7 @@ MonoBehaviour:
   resultText: {fileID: 1723411912}
   retryButton: {fileID: 351414203}
   mainMenuButton: {fileID: 2000120400}
+  navigationButtonsRoot: {fileID: 0}
   mainSceneName: Main
   mainMenuSceneName: MainMenu
   webAppUrl: https://script.google.com/macros/s/AKfycbyPmzk98vAeNMOf7kJdCNPJMDMfRe3_kewm2mCv7qmXVU9hcEPMAeoOxokXkz77nD5dWw/exec
@@ -1226,6 +1227,10 @@ MonoBehaviour:
   studentResultPanel: {fileID: 1583182561}
   letterText: {fileID: 867008497}
   closeResultButton: {fileID: 0}
+  displayMode: 0
+  resultLetterImage: {fileID: 0}
+  passLetterSprite: {fileID: 0}
+  failLetterSprite: {fileID: 0}
   passLetterTemplate: "Ch\xE0o em {name},\n\nCh\xFAc m\u1EEBng em \u0111\xE3 xu\u1EA5t
     s\u1EAFc v\u01B0\u1EE3t qua v\xF2ng training v\xE0 ch\xEDnh th\u1EE9c tr\u1EDF
     th\xE0nh th\xE0nh vi\xEAn m\u1EDBi c\u1EE7a Game Creator Club!\n\nCh\xE0o m\u1EEBng
@@ -2373,9 +2378,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Pause
-
-'
+  m_text: Paused
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 03e1cd5ea42e4d44694fb8aff4feba0c, type: 2}
   m_sharedMaterial: {fileID: 2443118842274636589, guid: 03e1cd5ea42e4d44694fb8aff4feba0c, type: 2}

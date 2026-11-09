@@ -9,6 +9,12 @@ using UnityEngine.UI;
 [DisallowMultipleComponent]
 public sealed class EndScreenView : MonoBehaviour
 {
+    public enum ResultDisplayMode
+    {
+        Text,
+        Image
+    }
+
     [Serializable]
     public class StudentResultData
     {
@@ -26,6 +32,8 @@ public sealed class EndScreenView : MonoBehaviour
     [SerializeField] private Button retryButton;
     [Tooltip("Nút quay về Main Menu khi thắng")]
     [SerializeField] private Button mainMenuButton;
+    [Tooltip("Khung chứa các nút điều hướng Retry / Menu (tuỳ chọn)")]
+    [SerializeField] private GameObject navigationButtonsRoot;
     [SerializeField] private string mainSceneName = "Main";
     [SerializeField] private string mainMenuSceneName = "MainMenu";
 
@@ -51,7 +59,17 @@ public sealed class EndScreenView : MonoBehaviour
     [Tooltip("Nút đóng panel kết quả")]
     [SerializeField] private Button closeResultButton;
 
-    [Header("Letter Templates")]
+    [Header("Result Format Settings")]
+    [Tooltip("Chọn cách hiển thị kết quả: Text (dùng mẫu chữ) hoặc Image (dùng ảnh thư thiết kế sẵn)")]
+    [SerializeField] private ResultDisplayMode displayMode = ResultDisplayMode.Text;
+    [Tooltip("Image component dùng để hiển thị ảnh thư (khi ở chế độ Image)")]
+    [SerializeField] private Image resultLetterImage;
+    [Tooltip("Ảnh thư hiển thị khi đỗ (Passed)")]
+    [SerializeField] private Sprite passLetterSprite;
+    [Tooltip("Ảnh thư hiển thị khi trượt (Failed)")]
+    [SerializeField] private Sprite failLetterSprite;
+
+    [Header("Letter Templates (Text Mode)")]
     [Tooltip("Dùng {name} ở nơi muốn chèn tên sinh viên")]
     [TextArea(5, 10)]
     [SerializeField] private string passLetterTemplate = 
@@ -80,6 +98,9 @@ public sealed class EndScreenView : MonoBehaviour
 
         if (studentResultPanel != null)
             studentResultPanel.SetActive(false);
+
+        if (resultLetterImage != null && resultLetterImage.gameObject != studentResultPanel)
+            resultLetterImage.gameObject.SetActive(false);
 
         if (gameManager == null)
             Debug.LogError("EndScreenView: GameManager was not found in the loaded scenes.", this);
@@ -166,12 +187,7 @@ public sealed class EndScreenView : MonoBehaviour
                 resultText.text = "ESCAPED";
 
             SetInputSectionActive(true);
-
-            if (retryButton != null)
-                retryButton.gameObject.SetActive(true);
-
-            if (mainMenuButton != null)
-                mainMenuButton.gameObject.SetActive(true);
+            SetNavigationButtonsActive(false);
 
             if (msvInputField != null)
             {
@@ -186,16 +202,23 @@ public sealed class EndScreenView : MonoBehaviour
         else // Lost
         {
             if (resultText != null)
-                resultText.text = "CATCHED";
+                resultText.text = "CAUGHT";
 
             SetInputSectionActive(false);
-
-            if (retryButton != null)
-                retryButton.gameObject.SetActive(true);
-
-            if (mainMenuButton != null)
-                mainMenuButton.gameObject.SetActive(true);
+            SetNavigationButtonsActive(true);
         }
+    }
+
+    private void SetNavigationButtonsActive(bool active)
+    {
+        if (retryButton != null)
+            retryButton.gameObject.SetActive(active);
+
+        if (mainMenuButton != null)
+            mainMenuButton.gameObject.SetActive(active);
+
+        if (navigationButtonsRoot != null)
+            navigationButtonsRoot.SetActive(active);
     }
 
     private void SetInputSectionActive(bool active)
@@ -319,17 +342,57 @@ public sealed class EndScreenView : MonoBehaviour
         if (studentResultPanel != null)
             studentResultPanel.SetActive(true);
 
-        if (letterText != null)
+        // Hiển thị 2 nút Play again và Menu sau khi đã tra cứu kết quả mã sinh viên
+        SetNavigationButtonsActive(true);
+
+        if (displayMode == ResultDisplayMode.Image)
         {
-            string template = data.isPassed ? passLetterTemplate : failLetterTemplate;
-            string studentName = string.IsNullOrEmpty(data.name) ? "em" : data.name.Trim();
+            if (letterText != null)
+                letterText.gameObject.SetActive(false);
 
-            // Thay thế biến {name} hoặc {0} vào dòng thư
-            string formattedLetter = template
-                .Replace("{name}", studentName)
-                .Replace("{0}", studentName);
+            if (resultLetterImage != null)
+            {
+                Sprite spriteToShow = data.isPassed ? passLetterSprite : failLetterSprite;
+                if (spriteToShow != null)
+                {
+                    resultLetterImage.sprite = spriteToShow;
+                }
+                else
+                {
+                    Debug.LogWarning($"[EndScreenView] {(data.isPassed ? "passLetterSprite" : "failLetterSprite")} chưa được gán trong Inspector!", this);
+                }
 
-            letterText.text = formattedLetter;
+                resultLetterImage.preserveAspect = true;
+
+                if (resultLetterImage.gameObject != studentResultPanel)
+                    resultLetterImage.gameObject.SetActive(true);
+                else
+                    resultLetterImage.enabled = true;
+            }
+            else
+            {
+                Debug.LogWarning("[EndScreenView] displayMode đang chọn Image nhưng resultLetterImage chưa được gán trong Inspector!", this);
+            }
+        }
+        else // Text Mode
+        {
+            if (resultLetterImage != null && resultLetterImage.gameObject != studentResultPanel)
+                resultLetterImage.gameObject.SetActive(false);
+
+            if (letterText != null)
+            {
+                letterText.gameObject.SetActive(true);
+
+                string template = data.isPassed ? passLetterTemplate : failLetterTemplate;
+                string studentName = string.IsNullOrEmpty(data.name) ? "em" : data.name.Trim();
+
+                // Thay thế biến {name} hoặc {0} vào dòng thư
+                string formattedLetter = template
+                    .Replace("{name}", studentName)
+                    .Replace("{0}", studentName);
+
+                letterText.text = formattedLetter;
+            }
         }
     }
 
@@ -339,6 +402,9 @@ public sealed class EndScreenView : MonoBehaviour
 
         if (studentResultPanel != null)
             studentResultPanel.SetActive(false);
+
+        // Đảm bảo 2 nút vẫn hiển thị sau khi đã đóng thư kết quả
+        SetNavigationButtonsActive(true);
     }
 
     private void ReloadMainScene()
