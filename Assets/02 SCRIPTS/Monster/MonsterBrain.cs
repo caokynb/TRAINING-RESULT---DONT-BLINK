@@ -114,6 +114,7 @@ public class MonsterBrain : MonoBehaviour
         BlinkEvents.OnEyesClosed += HandleEyesClosed;
         BlinkEvents.OnEyesOpened += HandleEyesOpened;
         GameEvents.OnPlayerCaught += Die;
+        GameEvents.OnPlayerReachedExit += HandlePlayerReachedExit;
     }
 
     private void OnDisable()
@@ -121,7 +122,15 @@ public class MonsterBrain : MonoBehaviour
         BlinkEvents.OnEyesClosed -= HandleEyesClosed;
         BlinkEvents.OnEyesOpened -= HandleEyesOpened;
         GameEvents.OnPlayerCaught -= Die;
+        GameEvents.OnPlayerReachedExit -= HandlePlayerReachedExit;
         StopFootstepSound();
+    }
+
+    private void HandlePlayerReachedExit()
+    {
+        hasCaughtPlayer = true;
+        StopFootstepSound();
+        enabled = false;
     }
 
     private void Update()

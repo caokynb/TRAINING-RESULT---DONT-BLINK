@@ -98,6 +98,7 @@ public sealed class BlinkHudView : MonoBehaviour
     private void OnEnable()
     {
         GameEvents.OnPlayerCaught += HandlePlayerCaught;
+        GameEvents.OnPlayerReachedExit += HandleGameWon;
 
         if (blinkSystem != null)
         {
@@ -111,6 +112,7 @@ public sealed class BlinkHudView : MonoBehaviour
     private void OnDisable()
     {
         GameEvents.OnPlayerCaught -= HandlePlayerCaught;
+        GameEvents.OnPlayerReachedExit -= HandleGameWon;
 
         if (blinkSystem != null)
         {
@@ -123,6 +125,16 @@ public sealed class BlinkHudView : MonoBehaviour
     private void HandlePlayerCaught()
     {
         isPlayerCaught = true;
+    }
+
+    private void HandleGameWon()
+    {
+        isPlayerCaught = true;
+        ResetCameraShake();
+        SetOverlayAlpha(0f);
+        if (hudCanvas != null)
+            hudCanvas.gameObject.SetActive(false);
+        enabled = false;
     }
 
     private void Update()

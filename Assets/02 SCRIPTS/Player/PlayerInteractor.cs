@@ -19,6 +19,12 @@ public class PlayerInteractor : MonoBehaviour
     [SerializeField] private Sprite keyIconSprite;
     [SerializeField] private Font customFont;
 
+    [Header("Prompt Colors")]
+    [Tooltip("Màu chữ tương tác mặc định (mặc định: Trắng)")]
+    [SerializeField] private Color defaultPromptColor = Color.white;
+    [Tooltip("Màu chữ cảnh báo khi cửa bị khóa (mặc định: Đỏ nhạt)")]
+    [SerializeField] private Color lockedPromptColor = new Color(1f, 0.35f, 0.35f, 1f);
+
     [Header("UI Hierarchy References (Tùy chỉnh trong Editor)")]
     [SerializeField] private Canvas interactorCanvas;
     [SerializeField] private Image crosshairDot;
@@ -444,13 +450,15 @@ public class PlayerInteractor : MonoBehaviour
             promptKeyIcon.gameObject.SetActive(isKey && keyIconSprite != null);
         }
 
-        if (prompt.Contains("khóa"))
+        // Chỉ đổi màu đỏ cảnh báo khi cửa thực sự bị khóa
+        bool isDoorLocked = interactable is ExitDoorController door && door.RequiresKey && !door.HasKey && !door.IsOpen;
+        if (isDoorLocked)
         {
-            promptText.color = new Color(1f, 0.35f, 0.35f, 1f);
+            promptText.color = lockedPromptColor;
         }
         else
         {
-            promptText.color = Color.white;
+            promptText.color = defaultPromptColor;
         }
 
         promptRoot.SetActive(true);

@@ -1521,7 +1521,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuController
   playButton: {fileID: 473798113}
+  creditButton: {fileID: 0}
   quitButton: {fileID: 1075657654}
+  titleObject: {fileID: 0}
+  menuButtonsObject: {fileID: 0}
+  creditPanel: {fileID: 0}
+  creditScrollRect: {fileID: 0}
+  autoScrollSpeed: 45
+  creditContent: "<size=200%><b>DON'T BLINK</b></size>\n\n--------- CORE DEVELOPMENT
+    TEAM ---------\n\n<color=#E5A93C>[ GAMEPLAY PROGRAMMER & BACKEND ]</color>\n<size=115%><b>Cao
+    K\u1EF3 (caokynb)</b></size>\n- Core Gameplay & State Management\n- Server API
+    & MSSV Verification System\n- Game Flow & Victory / Defeat Logic\n- UI Implementation\n\n<color=#E5A93C>[
+    TECH ARTIST, UI/UX & SOUND DESIGN ]</color>\n<size=115%><b>L\u1ED9c (ToilaLock)</b></size>\n-
+    UX Layout & Visual\n- Sound Design & Audio Implementation\n- Monster Posing &
+    Environment Art\n- Lighting & Post-Processing Atmosphere\n\n<color=#E5A93C>[
+    MAP SYSTEM & MONSTER AI PROGRAMMER ]</color>\n<size=115%><b>Th\xE0nh (ThanhLVT)</b></size>\n-
+    Map Generator & Map Builder Tools\n- Monster Brain / AI Behavior System\n- Monster
+    Spawner & Blink-Tracking Logic\n\n\n--------- THIRD-PARTY ASSETS & CREATORS ---------\n\n<color=#E5A93C>[
+    3D MODELS ]</color>\n\u2022 <b>Rigged Little Cardboard Mannequin</b> (Monster
+    Base)\n  by Colten Lewis (@coltenlewis on Sketchfab) - CC BY 4.0\n\n\u2022 <b>Game
+    Ready Backrooms Asset Pack</b> (Walls, Floors, Ceilings)\n  by Sketchfab Community
+    Creators - CC BY 4.0\n\n\u2022 <b>Door With Frame & Key / KeyTag</b>\n  by AxonDesigns
+    - CC BY 4.0\n\n\u2022 <b>Vietnam altar</b>\n  by Khoa Nguyen - CC BY 4.0\n\n<color=#E5A93C>[
+    AUDIO & SFX ]</color>\n\u2022 <b>Ambient & Sound Effects</b>\n  Freesound.org
+    & Pixabay.com Artists (CC0 / Public Domain)\n\n\n--------- SPECIAL THANKS ---------\n\n<b>Game
+    Creator Club (GCC)</b>\nMentors & Ban T\u1ED5 Ch\u1EE9c GCC Training 2026\nBackrooms
+    & SCP Foundation Community\nThird-party artist\n\n<b>And YOU - For Not Blinking!</b>\n\n<size=115%><b>\xA9
+    2026 GAME CREATOR CLUB</b></size>"
   gameSceneName: Main
 --- !u!4 &351573975
 Transform:

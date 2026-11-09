@@ -9651,6 +9651,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Monster
       objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalPosition.x
       value: 53.9467
@@ -9737,19 +9741,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8843828140973290063, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.96492594
+      value: 0.9607009
       objectReference: {fileID: 0}
     - target: {fileID: 8843828140973290063, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.23482406
+      value: 0.2515727
       objectReference: {fileID: 0}
     - target: {fileID: 8843828140973290063, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.078472726
+      value: -0.079914175
       objectReference: {fileID: 0}
     - target: {fileID: 8843828140973290063, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.08727954
+      value: 0.08589886
       objectReference: {fileID: 0}
     - target: {fileID: 9008002916028235857, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalRotation.w
@@ -31161,6 +31165,8 @@ MonoBehaviour:
     m_RotationOrder: 4
   isOpen: 0
   requiresKey: 1
+  lockedPrompt: Door is locked
+  openPrompt: 'LMB: Open the Door'
 --- !u!1001 &597926925
 PrefabInstance:
   m_ObjectHideFlags: 0

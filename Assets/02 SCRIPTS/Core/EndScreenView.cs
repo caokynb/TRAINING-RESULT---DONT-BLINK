@@ -93,6 +93,15 @@ public sealed class EndScreenView : MonoBehaviour
     {
         gameManager = FindAnyObjectByType<GameManager>();
 
+        if (navigationButtonsRoot == null && retryButton != null)
+        {
+            Transform parent = retryButton.transform.parent;
+            if (parent != null && (resultPanel == null || parent.gameObject != resultPanel))
+            {
+                navigationButtonsRoot = parent.gameObject;
+            }
+        }
+
         if (resultPanel != null)
             resultPanel.SetActive(false);
 
@@ -172,6 +181,7 @@ public sealed class EndScreenView : MonoBehaviour
             return;
 
         // Mở con trỏ chuột để click UI
+        Time.timeScale = 0f;
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
@@ -184,10 +194,10 @@ public sealed class EndScreenView : MonoBehaviour
         if (state == GameManager.GameState.Won)
         {
             if (resultText != null)
-                resultText.text = "ESCAPED";
+                resultText.text = "ESCAPED!";
 
             SetInputSectionActive(true);
-            SetNavigationButtonsActive(false);
+            SetNavigationButtonsActive(true);
 
             if (msvInputField != null)
             {
@@ -202,7 +212,7 @@ public sealed class EndScreenView : MonoBehaviour
         else // Lost
         {
             if (resultText != null)
-                resultText.text = "CAUGHT";
+                resultText.text = "CATCHED!";
 
             SetInputSectionActive(false);
             SetNavigationButtonsActive(true);
@@ -211,14 +221,14 @@ public sealed class EndScreenView : MonoBehaviour
 
     private void SetNavigationButtonsActive(bool active)
     {
+        if (navigationButtonsRoot != null)
+            navigationButtonsRoot.SetActive(active);
+
         if (retryButton != null)
             retryButton.gameObject.SetActive(active);
 
         if (mainMenuButton != null)
             mainMenuButton.gameObject.SetActive(active);
-
-        if (navigationButtonsRoot != null)
-            navigationButtonsRoot.SetActive(active);
     }
 
     private void SetInputSectionActive(bool active)
@@ -259,7 +269,7 @@ public sealed class EndScreenView : MonoBehaviour
             if (statusMessageText != null)
             {
                 statusMessageText.color = errorStatusColor;
-                statusMessageText.text = "Enter your student ID...";
+                statusMessageText.text = "Please enter your student ID...";
             }
             return;
         }
@@ -342,7 +352,7 @@ public sealed class EndScreenView : MonoBehaviour
         if (studentResultPanel != null)
             studentResultPanel.SetActive(true);
 
-        // Hiển thị 2 nút Play again và Menu sau khi đã tra cứu kết quả mã sinh viên
+        SetInputSectionActive(false);
         SetNavigationButtonsActive(true);
 
         if (displayMode == ResultDisplayMode.Image)
@@ -403,7 +413,7 @@ public sealed class EndScreenView : MonoBehaviour
         if (studentResultPanel != null)
             studentResultPanel.SetActive(false);
 
-        // Đảm bảo 2 nút vẫn hiển thị sau khi đã đóng thư kết quả
+        SetInputSectionActive(true);
         SetNavigationButtonsActive(true);
     }
 

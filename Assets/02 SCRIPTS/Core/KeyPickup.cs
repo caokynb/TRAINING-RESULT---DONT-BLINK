@@ -9,6 +9,10 @@ public class KeyPickup : MonoBehaviour, IInteractable
     [SerializeField] private float bobAmplitude = 0.04f;
     [SerializeField] private float bobFrequency = 2f;
 
+    [Header("Interaction Prompt")]
+    [Tooltip("Dòng chữ hiển thị khi nhìn vào chìa khóa")]
+    [SerializeField] private string promptMessage = "Chuột trái / E: Nhặt chìa khóa";
+
     private Vector3 initialPosition;
     private bool isCollected;
 
@@ -41,7 +45,7 @@ public class KeyPickup : MonoBehaviour, IInteractable
     // Triển khai IInteractable cho Raycast
     public string GetInteractionPrompt()
     {
-        return "Chuột trái / E: Nhặt chìa khóa";
+        return !string.IsNullOrEmpty(promptMessage) ? promptMessage : "LMB / E: Pick up Key";
     }
 
     public bool CanInteract()

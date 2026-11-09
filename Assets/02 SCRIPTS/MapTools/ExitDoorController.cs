@@ -19,6 +19,12 @@ public class ExitDoorController : MonoBehaviour, IInteractable
     [SerializeField] private bool isOpen;
     [SerializeField] private bool requiresKey = true;
 
+    [Header("Interaction Prompts")]
+    [Tooltip("Dòng chữ khi cửa đang bị khóa")]
+    [SerializeField] private string lockedPrompt = "Cửa bị khóa (Cần chìa khóa)";
+    [Tooltip("Dòng chữ khi đã có chìa khóa để mở cửa")]
+    [SerializeField] private string openPrompt = "Chuột trái / E: Mở cửa";
+
     private Quaternion closedLocalRotation;
     private Quaternion openLocalRotation;
     private Coroutine rotateCoroutine;
@@ -120,10 +126,10 @@ public class ExitDoorController : MonoBehaviour, IInteractable
         bool playerHoldsKey = hasKey || (KeyInventory.Instance != null && KeyInventory.Instance.HasKey);
         if (requiresKey && !playerHoldsKey)
         {
-            return "Cửa bị khóa (Cần chìa khóa)";
+            return !string.IsNullOrEmpty(lockedPrompt) ? lockedPrompt : "Door is locked (Key required)";
         }
 
-        return "Chuột trái / E: Mở cửa";
+        return !string.IsNullOrEmpty(openPrompt) ? openPrompt : "LMB / E: Open Door";
     }
 
     public bool CanInteract()

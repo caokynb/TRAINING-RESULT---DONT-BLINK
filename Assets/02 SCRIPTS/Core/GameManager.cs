@@ -50,6 +50,7 @@ public sealed class GameManager : MonoBehaviour
             return;
 
         SetState(GameState.Lost);
+        Time.timeScale = 0f;
     }
 
     private void HandlePlayerReachedExit()
@@ -59,25 +60,60 @@ public sealed class GameManager : MonoBehaviour
 
         LockPlayerControls();
         SetState(GameState.Won);
+        Time.timeScale = 0f;
     }
 
     private void LockPlayerControls()
     {
-        BlinkSystem blinkSystem = FindFirstObjectByType<BlinkSystem>();
-        if (blinkSystem != null)
-            blinkSystem.enabled = false;
+        // 1. Tắt toàn bộ hệ thống chớp mắt & mỏi mắt
+        BlinkSystem[] blinkSystems = FindObjectsByType<BlinkSystem>(FindObjectsSortMode.None);
+        foreach (var bs in blinkSystems)
+        {
+            bs.enabled = false;
+        }
 
-        PlayerMovement movement = FindFirstObjectByType<PlayerMovement>();
-        if (movement != null)
+        // 2. Tắt & ẩn toàn bộ Blink HUD (thanh mỏi mắt vàng, viền vignette đỏ, màn đen)
+        BlinkHudView[] blinkHuds = FindObjectsByType<BlinkHudView>(FindObjectsSortMode.None);
+        foreach (var hud in blinkHuds)
+        {
+            hud.enabled = false;
+            Canvas hudCanvas = hud.GetComponentInChildren<Canvas>(true);
+            if (hudCanvas != null)
+                hudCanvas.gameObject.SetActive(false);
+        }
+
+        // 3. Vô hiệu hóa toàn bộ quái vật để quái ngừng di chuyển và không jumpscare sau khi win
+        MonsterBrain[] monsters = FindObjectsByType<MonsterBrain>(FindObjectsSortMode.None);
+        foreach (var m in monsters)
+        {
+            m.enabled = false;
+        }
+
+        // 4. Khóa điều khiển người chơi
+        PlayerMovement[] movements = FindObjectsByType<PlayerMovement>(FindObjectsSortMode.None);
+        foreach (var movement in movements)
+        {
             movement.SetMovementLocked(true);
+            movement.enabled = false;
+        }
 
-        PlayerLook look = FindFirstObjectByType<PlayerLook>();
-        if (look != null)
+        PlayerLook[] looks = FindObjectsByType<PlayerLook>(FindObjectsSortMode.None);
+        foreach (var look in looks)
+        {
             look.enabled = false;
+        }
 
-        PlayerInputReader inputReader = FindFirstObjectByType<PlayerInputReader>();
-        if (inputReader != null)
+        PlayerInputReader[] inputReaders = FindObjectsByType<PlayerInputReader>(FindObjectsSortMode.None);
+        foreach (var inputReader in inputReaders)
+        {
             inputReader.enabled = false;
+        }
+
+        PlayerInteractor[] interactors = FindObjectsByType<PlayerInteractor>(FindObjectsSortMode.None);
+        foreach (var interactor in interactors)
+        {
+            interactor.enabled = false;
+        }
     }
 
     private void SetState(GameState newState)

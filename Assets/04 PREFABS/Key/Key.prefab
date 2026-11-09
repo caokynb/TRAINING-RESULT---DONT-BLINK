@@ -53,12 +53,12 @@ PrefabInstance:
       value: Key
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0397352ddd9eb1f42b26356f8501ae1b, type: 3}
-      propertyPath: m_TagString
-      value: Key
-      objectReference: {fileID: 0}
-    - target: {fileID: 919132149155446097, guid: 0397352ddd9eb1f42b26356f8501ae1b, type: 3}
       propertyPath: m_Layer
       value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 0397352ddd9eb1f42b26356f8501ae1b, type: 3}
+      propertyPath: m_TagString
+      value: Key
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -113,3 +113,4 @@ MonoBehaviour:
   rotateSpeed: 60
   bobAmplitude: 0.04
   bobFrequency: 2
+  promptMessage: 'LMB: Pick up the key'

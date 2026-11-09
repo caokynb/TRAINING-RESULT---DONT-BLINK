@@ -53,6 +53,7 @@ public sealed class BlinkSystem : MonoBehaviour
     {
         inputReader.BlinkPressed += TryManualBlink;
         inputReader.BlinkReleased += StopManualBlink;
+        GameEvents.OnPlayerReachedExit += HandleGameWon;
         FatigueChanged?.Invoke(Fatigue);
         EyesClosedChanged?.Invoke(false);
     }
@@ -61,9 +62,19 @@ public sealed class BlinkSystem : MonoBehaviour
     {
         inputReader.BlinkPressed -= TryManualBlink;
         inputReader.BlinkReleased -= StopManualBlink;
+        GameEvents.OnPlayerReachedExit -= HandleGameWon;
 
         if (IsBlinking)
             FinishBlink();
+    }
+
+    private void HandleGameWon()
+    {
+        if (IsBlinking)
+            FinishBlink();
+
+        SetFatigue(0f);
+        enabled = false;
     }
 
     private void Update()
