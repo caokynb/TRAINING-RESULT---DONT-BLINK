@@ -6,6 +6,8 @@ public static class SetupAudioManager
 {
     private const string PrefabDirectory = "Assets/04 PREFABS/Audio";
     private const string PrefabPath = "Assets/04 PREFABS/Audio/AudioManager.prefab";
+    private const string ResourcesDirectory = "Assets/Resources";
+    private const string ResourcesPrefabPath = "Assets/Resources/AudioManager.prefab";
     private const string SfxDirectory = "Assets/05 SFX";
 
     [MenuItem("Tools/Backrooms/Setup AudioManager (T11 & T12)", priority = 150)]
@@ -14,6 +16,10 @@ public static class SetupAudioManager
         if (!AssetDatabase.IsValidFolder(PrefabDirectory))
         {
             AssetDatabase.CreateFolder("Assets/04 PREFABS", "Audio");
+        }
+        if (!AssetDatabase.IsValidFolder(ResourcesDirectory))
+        {
+            AssetDatabase.CreateFolder("Assets", "Resources");
         }
 
         GameObject tempGO = new GameObject("AudioManager");
@@ -52,6 +58,7 @@ public static class SetupAudioManager
         so.ApplyModifiedPropertiesWithoutUndo();
 
         GameObject savedPrefab = PrefabUtility.SaveAsPrefabAsset(tempGO, PrefabPath);
+        PrefabUtility.SaveAsPrefabAsset(tempGO, ResourcesPrefabPath);
         Object.DestroyImmediate(tempGO);
 
         // Also configure Monster.prefab with 3D AudioSource and footstepsClip

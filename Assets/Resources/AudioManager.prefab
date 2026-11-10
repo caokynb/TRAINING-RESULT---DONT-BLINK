@@ -1,0 +1,77 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1000000000000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4000000000000001}
+  - component: {fileID: 1140000000000001}
+  m_Layer: 0
+  m_Name: AudioManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4000000000000001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1140000000000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1000000000000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b25e3051a983644ea46af72029e2b8f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  humAmbientClip: {fileID: 8300000, guid: 3f236112853f6a343a0b8bd5f7307feb, type: 3}
+  humBaseVolume: 0.35
+  lightFlickerClip: {fileID: 8300000, guid: 77e524af4926bf846a29190ae3e767a1, type: 3}
+  flickerVolume: 0.6
+  monsterFootstepsClip: {fileID: 8300000, guid: 2f085a5fd5fb00e4b94722292573b4a7, type: 3}
+  monsterFootstepsVolume: 1
+  blinkAmbientClip: {fileID: 8300000, guid: 4acb443d26247da4294696c45331d51f, type: 3}
+  blinkAmbientVolume: 0.5
+  playerFootstepClips:
+  - {fileID: 8300000, guid: b2bebfe31dd26764d93622f9a67d51d9, type: 3}
+  - {fileID: 8300000, guid: dc432873d0e765b4b9a9c0eff19744cc, type: 3}
+  - {fileID: 8300000, guid: b96a1cd076e2cca4fbff651e4bec953a, type: 3}
+  playerFootstepVolume: 0.2
+  panicHeartbeatClip: {fileID: 8300000, guid: 2840977692e768e478459c8be79edd65, type: 3}
+  maxPanicVolume: 0.7
+  panicDistanceNear: 2
+  panicDistanceFar: 8
+  jumpscareClip: {fileID: 8300000, guid: d35774934285e6048a3cadd07165f581, type: 3}
+  jumpscareVolume: 1
+  exitDoorClip: {fileID: 8300000, guid: f64ce785894bb704283a189b08c630c6, type: 3}
+  exitDoorVolume: 0.8
+  uiClickClip: {fileID: 8300000, guid: 582e8427326472744a5dcecaf5dbf153, type: 3}
+  uiClickVolume: 0.6
+  victoryClip: {fileID: 8300000, guid: 517ab3fb38ef55148965b51df058bff7, type: 3}
+  victoryVolume: 0.75
+  spookyClips:
+  - {fileID: 8300000, guid: 80c11abd16950394ea4a0d898815bf83, type: 3}
+  - {fileID: 8300000, guid: aae1fea4eeaf1e848b33c3c4bbc4bfd8, type: 3}
+  spookyVolume: 0.3
+  spookyMinInterval: 30
+  spookyMaxInterval: 65

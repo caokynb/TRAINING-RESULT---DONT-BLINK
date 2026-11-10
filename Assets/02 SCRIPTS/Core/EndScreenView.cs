@@ -197,7 +197,7 @@ public sealed class EndScreenView : MonoBehaviour
                 resultText.text = "ESCAPED!";
 
             SetInputSectionActive(true);
-            SetNavigationButtonsActive(false);
+            SetNavigationButtonsActive(true);
 
             if (msvInputField != null)
             {

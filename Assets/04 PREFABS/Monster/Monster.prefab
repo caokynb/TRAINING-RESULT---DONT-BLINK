@@ -91,7 +91,7 @@ MonoBehaviour:
       m_Calls: []
   modelFaceDirection: {x: 0, y: 0, z: -1}
   monsterAudioSource: {fileID: 0}
-  footstepsClip: {fileID: 0}
+  footstepsClip: {fileID: 8300000, guid: 2f085a5fd5fb00e4b94722292573b4a7, type: 3}
   footstepsVolume: 0.85
   minFootstepDistance: 2
   maxFootstepDistance: 30

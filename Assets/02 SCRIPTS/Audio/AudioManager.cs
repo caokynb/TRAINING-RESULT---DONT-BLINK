@@ -83,16 +83,27 @@ public class AudioManager : MonoBehaviour
     public AudioClip MonsterFootstepsClip => monsterFootstepsClip;
     public float MonsterFootstepsVolume => monsterFootstepsVolume;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
     private static void EnsureAudioManager()
     {
         if (Instance != null)
             return;
 
-        AudioManager existing = Object.FindFirstObjectByType<AudioManager>();
+        AudioManager existing = Object.FindAnyObjectByType<AudioManager>();
         if (existing != null)
         {
             Instance = existing;
+            return;
+        }
+
+        // Try loading configured prefab from Resources to ensure all AudioClips are included and loaded in Build
+        GameObject prefab = Resources.Load<GameObject>("AudioManager");
+        if (prefab != null)
+        {
+            GameObject audioGO = Object.Instantiate(prefab);
+            audioGO.name = "AudioManager";
+            DontDestroyOnLoad(audioGO);
+            Instance = audioGO.GetComponent<AudioManager>();
             return;
         }
 
