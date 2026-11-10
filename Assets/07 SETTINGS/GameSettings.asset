@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 48ad4c80a7d486c4fb5bca0255e9e2a1, type: 3}
   m_Name: GameSettings
   m_EditorClassIdentifier: Assembly-CSharp::GameSettings
-  walkSpeed: 4.5
+  walkSpeed: 4
   gravity: -20
   blindSpeedMultiplier: 0.8
   mouseSensitivity: 0.08
-  fatigueTime: 15
-  manualFatigueRecoveryRate: 0.6
+  fatigueTime: 14
+  manualFatigueRecoveryRate: 0.5
   manualBlinkCooldown: 2.5
   minManualBlinkDuration: 0.4
   minFatigueToBlink: 0.2

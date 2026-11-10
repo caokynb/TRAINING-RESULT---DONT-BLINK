@@ -310,7 +310,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c840a3854a104da2bb6218ef057416c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TutorialScreenView
-  instructionImage: {fileID: 2800000, guid: 1b26cf2bbde3cdd4fb9791b598774be0, type: 3}
+  instructionImage: {fileID: 2800000, guid: 1eceb1f21537aac4fbb85e4cb70a9f75, type: 3}
   instructionImageSize: {x: 1500, y: 844}
   confirmButtonSize: {x: 300, y: 76}
   buttonFontSize: 40
