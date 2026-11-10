@@ -18,15 +18,60 @@ MonoBehaviour:
   normalMinBlinkSteps: 1
   normalMaxBlinkSteps: 2
   farBlinkSteps: 3
-  nearHoldStepInterval: 0.45
+  nearHoldStepInterval: 0.4
   normalHoldStepInterval: 0.35
-  farHoldStepInterval: 0.2
-  minHoldStepInterval: 0.1
-  holdAcceleration: 0.18
+  farHoldStepInterval: 0.3
+  minHoldStepInterval: 0.12
+  holdAcceleration: 0.1
   nearCellThreshold: 4
   farCellThreshold: 10
+  preKeyMaxDifficulty: 0.2
+  preKeyTimeToMaxDifficulty: 120
+  preKeyMaxStepsPerBlink: 3
+  preKeyFarBlinkSteps: 2
+  preKeyHoldIntervalScale: 1.6
+  postKeyTimeToMaxDifficulty: 60
+  postKeyBaseDifficulty: 0.35
+  postKeyExponentialPower: 2
+  postKeyDifficultyCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0.2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.6
+      value: 0.25
+      inSlope: 0.8
+      outSlope: 1.2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 3
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  postKeyMaxBonusSteps: 3
+  postKeyForcedBlinkBonusSteps: 2
+  postKeyHoldIntervalScaleAtMax: 0.45
+  postKeyMaxStepsPerBlink: 10
   enableDifficultyScaling: 1
-  timeToMaxDifficulty: 180
+  timeToMaxDifficulty: 75
   difficultyCurve:
     serializedVersion: 2
     m_Curve:
@@ -52,4 +97,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   maxBonusSteps: 2
-  holdIntervalScaleAtMax: 0.7
+  holdIntervalScaleAtMax: 0.6
+  keyAggressionBonus: 0.35
+  forcedBlinkBonusSteps: 1
+  keyHoldIntervalMultiplier: 0.8

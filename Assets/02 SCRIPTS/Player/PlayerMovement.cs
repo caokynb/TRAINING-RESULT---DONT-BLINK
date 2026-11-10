@@ -23,6 +23,7 @@ public sealed class PlayerMovement : MonoBehaviour
 
     private CharacterController characterController;
     private PlayerInputReader inputReader;
+    private BlinkSystem blinkSystem;
     private float verticalVelocity;
     private bool isMovementLocked;
 
@@ -30,6 +31,7 @@ public sealed class PlayerMovement : MonoBehaviour
     {
         characterController = GetComponent<CharacterController>();
         inputReader = GetComponent<PlayerInputReader>();
+        blinkSystem = GetComponent<BlinkSystem>();
 
         if (GetComponent<PlayerInteractor>() == null)
         {
@@ -42,9 +44,8 @@ public sealed class PlayerMovement : MonoBehaviour
 
         if (settings == null)
         {
-            var blink = GetComponent<BlinkSystem>();
-            if (blink != null && blink.Settings != null)
-                settings = blink.Settings;
+            if (blinkSystem != null && blinkSystem.Settings != null)
+                settings = blinkSystem.Settings;
         }
     }
 
@@ -57,7 +58,17 @@ public sealed class PlayerMovement : MonoBehaviour
             verticalVelocity = -2f;
 
         verticalVelocity += Gravity * Time.deltaTime;
-        Vector3 velocity = planarVelocity * WalkSpeed;
+
+        float currentSpeed = WalkSpeed;
+        if (blinkSystem == null)
+            blinkSystem = GetComponent<BlinkSystem>();
+
+        if (blinkSystem != null && blinkSystem.IsBlinking && blinkSystem.IsManualBlink)
+        {
+            currentSpeed *= blinkSystem.BlindSpeedMultiplier;
+        }
+
+        Vector3 velocity = planarVelocity * currentSpeed;
         velocity.y = verticalVelocity;
         characterController.Move(velocity * Time.deltaTime);
 

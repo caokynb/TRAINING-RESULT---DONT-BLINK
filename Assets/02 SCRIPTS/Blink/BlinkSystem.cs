@@ -8,10 +8,13 @@ public sealed class BlinkSystem : MonoBehaviour
     [SerializeField] private GameSettings settings;
 
     [Header("Fallbacks (Used if Settings is not assigned)")]
-    [SerializeField, Min(0.1f)] private float fatigueTime = 12f;
-    [SerializeField, Min(0.01f)] private float manualFatigueRecoveryRate = 1f;
-    [SerializeField, Min(0f)] private float manualBlinkCooldown = 1.5f;
-    [SerializeField, Min(0.01f)] private float forcedBlinkDuration = 1f;
+    [SerializeField, Min(0.1f)] private float fatigueTime = 9.5f;
+    [SerializeField, Min(0.01f)] private float manualFatigueRecoveryRate = 0.45f;
+    [SerializeField, Min(0f)] private float manualBlinkCooldown = 2.5f;
+    [SerializeField, Min(0.1f)] private float minManualBlinkDuration = 0.4f;
+    [SerializeField, Range(0f, 0.5f)] private float minFatigueToBlink = 0.2f;
+    [SerializeField, Min(0.01f)] private float forcedBlinkDuration = 1.2f;
+    [SerializeField, Range(0.1f, 1f)] private float blindSpeedMultiplier = 0.7f;
 
     public GameSettings Settings
     {
@@ -22,19 +25,26 @@ public sealed class BlinkSystem : MonoBehaviour
     public float FatigueTime => settings != null ? settings.FatigueTime : fatigueTime;
     public float ManualFatigueRecoveryRate => settings != null ? settings.ManualFatigueRecoveryRate : manualFatigueRecoveryRate;
     public float ManualBlinkCooldown => settings != null ? settings.ManualBlinkCooldown : manualBlinkCooldown;
+    public float MinManualBlinkDuration => settings != null ? settings.MinManualBlinkDuration : minManualBlinkDuration;
+    public float MinFatigueToBlink => settings != null ? settings.MinFatigueToBlink : minFatigueToBlink;
     public float ForcedBlinkDuration => settings != null ? settings.ForcedBlinkDuration : forcedBlinkDuration;
+    public float BlindSpeedMultiplier => settings != null ? settings.BlindSpeedMultiplier : blindSpeedMultiplier;
 
     public event Action<float> FatigueChanged;
     public event Action<bool> EyesClosedChanged;
 
     public float Fatigue { get; private set; }
     public bool IsBlinking { get; private set; }
+    public bool IsManualBlink => isManualBlink;
+    public float ManualCooldownRemaining => manualCooldownRemaining;
 
     private PlayerInputReader inputReader;
     private PlayerMovement playerMovement;
     private float blinkTimeRemaining;
     private float manualCooldownRemaining;
+    private float currentBlinkElapsed;
     private bool isManualBlink;
+    private bool wantsToOpen;
 
     private void Awake()
     {
@@ -79,24 +89,37 @@ public sealed class BlinkSystem : MonoBehaviour
 
     private void Update()
     {
-        manualCooldownRemaining = Mathf.Max(0f, manualCooldownRemaining - Time.deltaTime);
-
         if (IsBlinking)
         {
+            currentBlinkElapsed += Time.deltaTime;
+
             if (isManualBlink)
             {
                 // Space controls how long the eyes stay closed; reaching zero fatigue does not open them.
                 SetFatigue(Fatigue - ManualFatigueRecoveryRate * Time.deltaTime);
+
+                // If player released Space earlier, open eyes once minimum blink duration is met
+                if (wantsToOpen && currentBlinkElapsed >= MinManualBlinkDuration)
+                {
+                    FinishBlink();
+                    return;
+                }
             }
             else
             {
                 blinkTimeRemaining -= Time.deltaTime;
                 if (blinkTimeRemaining <= 0f)
+                {
                     FinishBlink();
+                    return;
+                }
             }
 
             return;
         }
+
+        // Cooldown counts down only when eyes are open!
+        manualCooldownRemaining = Mathf.Max(0f, manualCooldownRemaining - Time.deltaTime);
 
         SetFatigue(Fatigue + Time.deltaTime / FatigueTime);
 
@@ -106,23 +129,40 @@ public sealed class BlinkSystem : MonoBehaviour
 
     private void TryManualBlink()
     {
-        if (IsBlinking || manualCooldownRemaining > 0f || Fatigue <= 0f)
+        if (IsBlinking || manualCooldownRemaining > 0f)
             return;
 
-        float expectedDuration = Fatigue / ManualFatigueRecoveryRate;
+        // Cannot blink if fatigue has not reached minimum threshold
+        if (Fatigue < MinFatigueToBlink)
+            return;
+
+        wantsToOpen = false;
+        currentBlinkElapsed = 0f;
+        float expectedDuration = Mathf.Max(MinManualBlinkDuration, Fatigue / ManualFatigueRecoveryRate);
         StartBlink(expectedDuration, isManual: true);
-        manualCooldownRemaining = ManualBlinkCooldown;
     }
 
     private void StopManualBlink()
     {
-        if (IsBlinking && isManualBlink)
+        if (!IsBlinking || !isManualBlink)
+            return;
+
+        if (currentBlinkElapsed >= MinManualBlinkDuration)
+        {
             FinishBlink();
+        }
+        else
+        {
+            // Player let go before minimum duration was reached; wait until MinManualBlinkDuration
+            wantsToOpen = true;
+        }
     }
 
     private void StartForcedBlink()
     {
         SetFatigue(0f);
+        wantsToOpen = false;
+        currentBlinkElapsed = 0f;
         StartBlink(ForcedBlinkDuration, isManual: false);
     }
 
@@ -134,19 +174,30 @@ public sealed class BlinkSystem : MonoBehaviour
 
         if (!isManualBlink)
             playerMovement.SetMovementLocked(true);
+
         BlinkEvents.RaiseClosed(duration);
         EyesClosedChanged?.Invoke(true);
     }
 
     private void FinishBlink()
     {
+        bool wasManual = isManualBlink;
         bool shouldUnlockMovement = !isManualBlink;
+
         IsBlinking = false;
         isManualBlink = false;
+        wantsToOpen = false;
+        currentBlinkElapsed = 0f;
         blinkTimeRemaining = 0f;
 
         if (shouldUnlockMovement)
             playerMovement.SetMovementLocked(false);
+
+        // Cooldown starts AFTER eyes open so player is forced to keep eyes open!
+        if (wasManual)
+        {
+            manualCooldownRemaining = ManualBlinkCooldown;
+        }
 
         BlinkEvents.RaiseOpened();
         EyesClosedChanged?.Invoke(false);

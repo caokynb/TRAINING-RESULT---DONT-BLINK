@@ -22,11 +22,11 @@ public class MonsterBrain : MonoBehaviour
     [SerializeField] private int farBlinkSteps = 3;
 
     [Header("Hold Intervals (Fallbacks)")]
-    [SerializeField] private float nearHoldStepInterval = 0.45f;
+    [SerializeField] private float nearHoldStepInterval = 0.40f;
     [SerializeField] private float normalHoldStepInterval = 0.35f;
-    [SerializeField] private float farHoldStepInterval = 0.2f;
-    [SerializeField] private float minHoldStepInterval = 0.1f;
-    [SerializeField] private float holdAcceleration = 0.18f;
+    [SerializeField] private float farHoldStepInterval = 0.30f;
+    [SerializeField] private float minHoldStepInterval = 0.12f;
+    [SerializeField] private float holdAcceleration = 0.10f;
 
     [Header("Debug & Events")]
     [SerializeField] private float simulatedBlinkDuration = 0.25f;
@@ -48,8 +48,10 @@ public class MonsterBrain : MonoBehaviour
     private Transform playerTransform;
     private BlinkSystem blinkSystem;
     private float spawnTime;
+    private float keyPickupTime = -1f;
     private float holdStepTimer;
     private float closedDuration;
+    private int stepsTakenInCurrentBlink;
     private bool wasEyesClosed;
     private bool hasCaughtPlayer;
 
@@ -73,9 +75,19 @@ public class MonsterBrain : MonoBehaviour
     public float MinHoldStepInterval => settings != null ? settings.MinHoldStepInterval : minHoldStepInterval;
     public float HoldAcceleration => settings != null ? settings.HoldAcceleration : holdAcceleration;
 
+    private bool HasKey => KeyInventory.Instance != null && KeyInventory.Instance.HasKey;
+    private bool IsForcedBlink => blinkSystem != null && blinkSystem.IsBlinking && !blinkSystem.IsManualBlink;
+
     public float TimeSinceGracePeriod => Mathf.Max(0f, (Time.time - spawnTime) - InitialGracePeriod);
-    public float CurrentDifficulty => settings != null ? settings.EvaluateDifficulty(TimeSinceGracePeriod) : 0f;
-    public int CurrentBonusSteps => settings != null ? settings.GetBonusSteps(TimeSinceGracePeriod) : 0;
+    public float TimeSinceKeyPickup => (keyPickupTime >= 0f) ? Mathf.Max(0f, Time.time - keyPickupTime) : 0f;
+
+    public float CurrentDifficulty => settings != null 
+        ? settings.EvaluateDifficulty(TimeSinceGracePeriod, HasKey, TimeSinceKeyPickup) 
+        : (HasKey ? 0.35f : 0f);
+
+    public int CurrentBonusSteps => settings != null 
+        ? settings.GetBonusSteps(TimeSinceGracePeriod, HasKey, TimeSinceKeyPickup, IsForcedBlink) 
+        : (HasKey ? 1 : 0);
 
     private void SetupMonsterAudio()
     {
@@ -105,6 +117,7 @@ public class MonsterBrain : MonoBehaviour
     private void Start()
     {
         spawnTime = Time.time;
+        keyPickupTime = -1f;
         ResolvePlayer();
         FacePlayer();
     }
@@ -115,6 +128,7 @@ public class MonsterBrain : MonoBehaviour
         BlinkEvents.OnEyesOpened += HandleEyesOpened;
         GameEvents.OnPlayerCaught += Die;
         GameEvents.OnPlayerReachedExit += HandlePlayerReachedExit;
+        GameEvents.OnKeyPickedUp += HandleKeyPickedUp;
     }
 
     private void OnDisable()
@@ -123,7 +137,15 @@ public class MonsterBrain : MonoBehaviour
         BlinkEvents.OnEyesOpened -= HandleEyesOpened;
         GameEvents.OnPlayerCaught -= Die;
         GameEvents.OnPlayerReachedExit -= HandlePlayerReachedExit;
+        GameEvents.OnKeyPickedUp -= HandleKeyPickedUp;
         StopFootstepSound();
+    }
+
+    private void HandleKeyPickedUp()
+    {
+        keyPickupTime = Time.time;
+        Debug.Log("[MonsterBrain] Player picked up key! Enraged hunt mode activated (Exponential scaling).");
+        FacePlayer();
     }
 
     private void HandlePlayerReachedExit()
@@ -145,6 +167,12 @@ public class MonsterBrain : MonoBehaviour
         if (hasCaughtPlayer)
             return;
 
+        // Đồng bộ thời gian nhặt chìa khóa dự phòng
+        if (HasKey && keyPickupTime < 0f)
+        {
+            keyPickupTime = Time.time;
+        }
+
         bool eyesClosed = IsEyesClosed();
 
         if (!eyesClosed)
@@ -154,6 +182,7 @@ public class MonsterBrain : MonoBehaviour
                 wasEyesClosed = false;
                 holdStepTimer = 0f;
                 closedDuration = 0f;
+                stepsTakenInCurrentBlink = 0;
                 StopFootstepSound();
                 FacePlayer();
             }
@@ -165,19 +194,39 @@ public class MonsterBrain : MonoBehaviour
             wasEyesClosed = true;
             holdStepTimer = 0f;
             closedDuration = 0f;
+            stepsTakenInCurrentBlink = 0;
         }
 
         if (!IsGracePeriodOver())
             return;
+
+        // Giới hạn số bước tối đa trong một đợt nhắm mắt (đặc biệt khi mỏi mắt / forced blink)
+        int maxStepsAllowed = settings != null ? settings.GetMaxStepsPerBlink(HasKey) : (HasKey ? 10 : 3);
+        if (stepsTakenInCurrentBlink >= maxStepsAllowed)
+        {
+            // Đã đạt số bước tối đa cho phép trong lần nhắm mắt này -> Dừng lại chờ người chơi mở mắt
+            StopFootstepSound();
+            return;
+        }
 
         closedDuration += Time.deltaTime;
         holdStepTimer += Time.deltaTime;
 
         int cellDist = GetCurrentCellDistance();
         float baseInterval = GetBaseIntervalByDistance(cellDist);
-        float intervalMult = settings != null ? settings.GetHoldIntervalMultiplier(TimeSinceGracePeriod) : 1f;
+        float intervalMult = settings != null 
+            ? settings.GetHoldIntervalMultiplier(TimeSinceGracePeriod, HasKey, TimeSinceKeyPickup) 
+            : (HasKey ? 0.8f : 1.6f);
+
+        // Quái vật chỉ bứt tốc dồn ép khi người chơi bị ép nhắm mắt (Forced Blink) SAU KHI ĐÃ CÓ CHÌA KHÓA
+        if (IsForcedBlink && HasKey)
+        {
+            intervalMult *= 0.75f;
+        }
+
+        float minInterval = settings != null ? settings.MinHoldStepInterval : minHoldStepInterval;
         float currentInterval = Mathf.Max(
-            MinHoldStepInterval,
+            minInterval,
             (baseInterval - closedDuration * HoldAcceleration) * intervalMult
         );
 
@@ -185,7 +234,14 @@ public class MonsterBrain : MonoBehaviour
         {
             holdStepTimer -= currentInterval;
             int holdSteps = GetHoldSteps(cellDist, closedDuration);
-            StepTowardsPlayer(holdSteps);
+            int remainingSteps = maxStepsAllowed - stepsTakenInCurrentBlink;
+            int actualSteps = Mathf.Clamp(holdSteps, 1, remainingSteps);
+
+            if (actualSteps > 0)
+            {
+                StepTowardsPlayer(actualSteps);
+                stepsTakenInCurrentBlink += actualSteps;
+            }
         }
     }
 
@@ -209,7 +265,8 @@ public class MonsterBrain : MonoBehaviour
         wasEyesClosed = true;
         holdStepTimer = 0f;
         closedDuration = 0f;
-        Debug.Log($"[MonsterBrain] Eyes Closed (duration: {duration:F2}s)");
+        stepsTakenInCurrentBlink = 0;
+        Debug.Log($"[MonsterBrain] Eyes Closed (duration: {duration:F2}s, forced: {IsForcedBlink})");
 
         if (hasCaughtPlayer)
             return;
@@ -221,8 +278,12 @@ public class MonsterBrain : MonoBehaviour
         }
 
         int cellDist = GetCurrentCellDistance();
-        int steps = GetInitialBlinkSteps(cellDist);
-        StepTowardsPlayer(steps);
+        int maxStepsAllowed = settings != null ? settings.GetMaxStepsPerBlink(HasKey) : (HasKey ? 10 : 3);
+        int initialSteps = GetInitialBlinkSteps(cellDist);
+
+        int stepsToTake = Mathf.Clamp(initialSteps, 1, maxStepsAllowed);
+        StepTowardsPlayer(stepsToTake);
+        stepsTakenInCurrentBlink += stepsToTake;
     }
 
     private void HandleEyesOpened()
@@ -230,6 +291,7 @@ public class MonsterBrain : MonoBehaviour
         wasEyesClosed = false;
         holdStepTimer = 0f;
         closedDuration = 0f;
+        stepsTakenInCurrentBlink = 0;
         StopFootstepSound();
         FacePlayer();
         Debug.Log("[MonsterBrain] Eyes Opened");
@@ -254,7 +316,10 @@ public class MonsterBrain : MonoBehaviour
         {
             monsterAudioSource.clip = footstepsClip;
             monsterAudioSource.volume = footstepsVolume;
-            monsterAudioSource.pitch = Random.Range(0.95f, 1.05f);
+            
+            // Pitch thay đổi theo độ khó: lúc roaming giữ chuẩn (1.0), khi có chìa tăng dần tạo cảm giác dồn dập
+            float diffPitch = HasKey ? Mathf.Lerp(1.0f, 1.25f, CurrentDifficulty) : 1.0f;
+            monsterAudioSource.pitch = diffPitch * Random.Range(0.96f, 1.04f);
 
             if (!monsterAudioSource.isPlaying)
             {
@@ -273,6 +338,20 @@ public class MonsterBrain : MonoBehaviour
 
     private int GetInitialBlinkSteps(int cellDist)
     {
+        if (!HasKey)
+        {
+            // Giai đoạn Roaming: di chuyển nhẹ nhàng, cự ly xa tối đa preKeyFarBlinkSteps
+            if (cellDist <= NearCellThreshold)
+                return NearBlinkSteps;
+
+            int farLimit = settings != null ? settings.PreKeyFarBlinkSteps : 2;
+            if (cellDist >= FarCellThreshold)
+                return farLimit;
+
+            return Random.Range(NormalMinBlinkSteps, Mathf.Min(NormalMaxBlinkSteps + 1, farLimit + 1));
+        }
+
+        // Giai đoạn Escape: di chuyển hung hãn theo độ khó Exponential
         int baseSteps;
         if (cellDist <= NearCellThreshold)
             baseSteps = NearBlinkSteps;
@@ -283,7 +362,7 @@ public class MonsterBrain : MonoBehaviour
         else
             baseSteps = Random.Range(NormalMinBlinkSteps, NormalMaxBlinkSteps + 1);
 
-        int bonusSteps = settings != null ? settings.GetBonusSteps(TimeSinceGracePeriod) : 0;
+        int bonusSteps = CurrentBonusSteps;
         return baseSteps + bonusSteps;
     }
 
@@ -300,16 +379,23 @@ public class MonsterBrain : MonoBehaviour
 
     private int GetHoldSteps(int cellDist, float heldTime)
     {
+        if (!HasKey)
+        {
+            // Roaming: mỗi nhịp hold chỉ bước đúng 1 ô
+            return 1;
+        }
+
+        // Escape: Càng giữ mắt nhắm lâu quái càng sải bước dài hơn
         int baseSteps;
         if (cellDist <= NearCellThreshold)
-            baseSteps = heldTime >= 1.2f ? 2 : 1;
+            baseSteps = heldTime >= 1.0f ? 2 : 1;
         else if (cellDist >= FarCellThreshold)
-            baseSteps = heldTime >= 0.6f ? 3 : 2;
+            baseSteps = heldTime >= 0.5f ? 2 : 1;
         else
-            baseSteps = heldTime >= 0.8f ? 2 : 1;
+            baseSteps = heldTime >= 0.7f ? 2 : 1;
 
-        int bonusSteps = settings != null ? settings.GetBonusSteps(TimeSinceGracePeriod) : 0;
-        return baseSteps + (bonusSteps > 0 ? 1 : 0);
+        int bonusSteps = CurrentBonusSteps;
+        return baseSteps + (bonusSteps >= 2 ? 1 : 0);
     }
 
     private int GetCurrentCellDistance()

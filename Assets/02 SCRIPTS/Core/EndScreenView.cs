@@ -197,7 +197,7 @@ public sealed class EndScreenView : MonoBehaviour
                 resultText.text = "ESCAPED!";
 
             SetInputSectionActive(true);
-            SetNavigationButtonsActive(true);
+            SetNavigationButtonsActive(false);
 
             if (msvInputField != null)
             {
@@ -212,7 +212,7 @@ public sealed class EndScreenView : MonoBehaviour
         else // Lost
         {
             if (resultText != null)
-                resultText.text = "CATCHED!";
+                resultText.text = "CAUGHT!";
 
             SetInputSectionActive(false);
             SetNavigationButtonsActive(true);
@@ -354,6 +354,8 @@ public sealed class EndScreenView : MonoBehaviour
 
         SetInputSectionActive(false);
         SetNavigationButtonsActive(true);
+        if (navigationButtonsRoot != null)
+            navigationButtonsRoot.transform.SetAsLastSibling();
 
         if (displayMode == ResultDisplayMode.Image)
         {
