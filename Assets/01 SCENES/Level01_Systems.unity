@@ -1237,8 +1237,9 @@ MonoBehaviour:
     th\u1EA7n n\u1ED7 l\u1EF1c tuy\u1EC7t v\u1EDDi. B\u01B0\u1EDBc ti\u1EBFp theo,
     em h\xE3y ch\u1EE7 \u0111\u1ED9ng li\xEAn h\u1EC7 ngay v\u1EDBi b\u1EA5t k\u1EF3
     anh/ch\u1ECB mentor n\xE0o trong team c\u1EE7a m\xECnh \u0111\u1EC3 nh\u1EADn
-    h\u01B0\u1EDBng d\u1EABn onboard nh\xE9.\r\n\r\nCh\xE0o m\u1EEBng em gia nh\u1EADp
-    \u0111\u1EA1i gia \u0111\xECnh GCC!\n\nCLB Nh\xE0 s\xE1ng t\u1EA1o game PTIT"
+    h\u01B0\u1EDBng d\u1EABn ti\u1EBFp theo nh\xE9.\r\n\r\nCh\xE0o m\u1EEBng em gia
+    nh\u1EADp \u0111\u1EA1i gia \u0111\xECnh GCC!\n\nCLB Nh\xE0 s\xE1ng t\u1EA1o
+    game PTIT"
   failLetterTemplate: "Th\xE2n g\u1EEDi {name},\r\n\r\nC\u1EA2M \u01A0N EM \u0110\xC3
     N\u1ED6 L\u1EF0C V\xC0 \u0110\u1ED2NG H\xC0NH H\u1EBET M\xCCNH C\xD9NG V\xD2NG
     TRAINING 2026!\r\n\r\nD\xF9 ch\u1EB7ng \u0111\u01B0\u1EDDng l\u1EA7n n\xE0y ch\u01B0a
@@ -1697,7 +1698,7 @@ MonoBehaviour:
     n\u1ED7 l\u1EF1c tuy\u1EC7t v\u1EDDi. B\u01B0\u1EDBc ti\u1EBFp theo, em h\xE3y
     ch\u1EE7 \u0111\u1ED9ng li\xEAn h\u1EC7 ngay v\u1EDBi b\u1EA5t k\u1EF3 anh/ch\u1ECB
     mentor n\xE0o trong team c\u1EE7a m\xECnh \u0111\u1EC3 nh\u1EADn h\u01B0\u1EDBng
-    d\u1EABn onboard nh\xE9.\r\n\r\nCh\xE0o m\u1EEBng em gia nh\u1EADp \u0111\u1EA1i
+    d\u1EABn ti\u1EBFp theo nh\xE9.\r\n\r\nCh\xE0o m\u1EEBng em gia nh\u1EADp \u0111\u1EA1i
     gia \u0111\xECnh GCC!\n\nCLB Nh\xE0 S\xE1ng t\u1EA1o game ptit"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: addda208a75925d42bf986e18ec0253f, type: 2}
@@ -3336,7 +3337,7 @@ RectTransform:
   m_GameObject: {fileID: 1583182561}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.005, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1046416498}

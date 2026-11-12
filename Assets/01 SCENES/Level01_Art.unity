@@ -9741,19 +9741,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8843828140973290063, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.9607009
+      value: 0.9395212
       objectReference: {fileID: 0}
     - target: {fileID: 8843828140973290063, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0.2515727
+      value: 0.32184556
       objectReference: {fileID: 0}
     - target: {fileID: 8843828140973290063, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalRotation.y
-      value: -0.079914175
+      value: -0.085765965
       objectReference: {fileID: 0}
     - target: {fileID: 8843828140973290063, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0.08589886
+      value: 0.07974638
       objectReference: {fileID: 0}
     - target: {fileID: 9008002916028235857, guid: a1b2c3d4e5f6478990123456789abc03, type: 3}
       propertyPath: m_LocalRotation.w
@@ -55463,6 +55463,7 @@ GameObject:
   - component: {fileID: 1096104659}
   - component: {fileID: 1096104658}
   - component: {fileID: 1096104657}
+  - component: {fileID: 1096104663}
   m_Layer: 0
   m_Name: Picture (4)
   m_TagString: Untagged
@@ -55603,6 +55604,21 @@ RectTransform:
   m_AnchoredPosition: {x: -3.8035622, y: 0.6640701}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1096104663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1096104656}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8a91b2c3d4e5f6a7b8c9d0e1f2a3b4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SecretWinInteractable
+  promptMessage: ???
+  winOnTouch: 0
+  maxClickDistance: 1
 --- !u!1001 &1096260242
 PrefabInstance:
   m_ObjectHideFlags: 0
